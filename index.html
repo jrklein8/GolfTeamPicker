@@ -1,0 +1,1507 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Farmer's Invitational</title>
+<meta name="description" content="A random golf cart race and par 3 shootout that pick the team captains for the Farmer's Invitational.">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<style>
+/* Layout: one column. Clubhouse sign header, the hole as a wide canvas, a broadcast
+   lower-third for the whispering announcer, then a hand-operated leaderboard. */
+:root{
+  color-scheme:dark;
+  --pine:#0d3326; --pine-2:#14463a; --fairway:#2f8f4e;
+  --board:#f6f3e7; --ink:#15231c; --ink-soft:#56655c; --rule:#cfc9b4;
+  --flag:#ffd23f; --pink:#ff5fa2; --red:#d8342c; --jacket:#0b6b3a;
+  --display:"Alfa Slab One","Rockwell","Georgia",serif;
+  --body:"Barlow","Helvetica Neue",Arial,sans-serif;
+  --cond:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{background:var(--pine);color:var(--board);font-family:var(--body);font-size:16px;line-height:1.4}
+.wrap{max-width:1040px;margin:0 auto;padding-block:20px 40px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:6px 24px}
+.eyebrow{user-select:none;-webkit-user-select:none;margin:0;font-family:var(--cond);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:.82rem;color:var(--flag)}
+h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(2rem,7vw,3.4rem);line-height:1;letter-spacing:.01em;text-wrap:balance}
+.sub{margin:0;color:#b9d2c2;max-width:34ch}
+.tabs{display:flex;flex-wrap:wrap;gap:8px}
+.tabs button{font-size:1rem;padding:8px 16px;background:var(--pine-2);color:var(--board);border-color:var(--board);box-shadow:none}
+.tabs .speed{margin-left:auto}
+.tabs button[aria-selected="true"]{background:var(--flag);color:var(--ink);border-color:var(--flag)}
+.stage{position:relative;border-radius:10px;overflow:hidden;border:3px solid var(--board);background:var(--fairway);line-height:0}
+canvas{display:block;width:100%}
+.count{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:clamp(4rem,22vw,9rem);
+  color:var(--flag);text-shadow:0 5px 0 var(--ink),0 0 40px rgba(0,0,0,.5);line-height:1;pointer-events:none}
+/* cut-in banner for featured moments */
+.cut{position:absolute;left:-4%;right:-4%;padding:10px 9%;background:var(--red);color:#fff;text-align:center;line-height:1.05;
+  box-shadow:0 0 0 4px var(--ink),0 0 0 8px var(--flag);transform:skewY(-3deg);pointer-events:none}
+.cut.hi{top:17%}.cut.lo{bottom:9%}
+.cut.in{animation:cut .22s cubic-bezier(.2,1.2,.4,1)}
+@keyframes cut{from{transform:translateX(-110%) skewY(-3deg)}to{transform:translateX(0) skewY(-3deg)}}
+.cut b{display:block;font-family:var(--display);font-weight:400;font-size:clamp(1.5rem,7vw,3.2rem);text-shadow:0 3px 0 var(--ink)}
+.cut span{display:block;margin-top:4px;font-family:var(--cond);font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  font-size:clamp(.95rem,3vw,1.35rem);color:var(--flag);overflow-wrap:anywhere}
+/* cart girl photo card */
+.pin{--r:5deg;position:absolute;top:9%;right:3%;width:min(44%,250px);margin:0;padding:8px 8px 0;background:#fff;border-radius:4px;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);transform:rotate(var(--r));pointer-events:none;line-height:1.15}
+.pin.left{--r:-5deg;right:auto;left:3%}
+.pin img{display:block;width:100%;aspect-ratio:3/4;object-fit:cover;background:var(--pink)}
+.pin figcaption{padding:8px 2px 10px;text-align:center;color:var(--ink);font-family:var(--display);font-size:clamp(.8rem,2.6vw,1.05rem);overflow-wrap:anywhere}
+.pin.show{animation:pin 3.4s ease-out both}
+@keyframes pin{0%{transform:translateY(-140%) rotate(var(--r))}9%{transform:translateY(5%) rotate(var(--r))}13%,90%{transform:translateY(0) rotate(var(--r))}100%{transform:translateY(-140%) rotate(var(--r))}}
+.ticker{display:flex;align-items:stretch;background:var(--ink);border-radius:8px;overflow:hidden;min-height:3.4rem}
+.tag{flex:none;display:flex;align-items:center;padding:0 12px;background:var(--red);color:#fff;font-family:var(--cond);font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;font-size:.8rem}
+#say{margin:0;padding:8px 14px;align-self:center;min-width:0;font-weight:600;font-size:1.02rem;font-style:italic}
+#say.pop{animation:pop .35s ease-out}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel{background:var(--board);color:var(--ink);border-radius:10px;padding:18px}
+.panel h2{margin:0 0 4px;font-family:var(--display);font-weight:400;font-size:1.35rem}
+.panel h3{margin:22px 0 4px;padding-top:16px;border-top:2px solid var(--ink);font-family:var(--display);font-weight:400;font-size:1.1rem}
+.hint{margin:0 0 14px;color:var(--ink-soft);font-size:.95rem;max-width:70ch}
+.names{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.slot{display:flex;align-items:center;gap:8px;min-width:0}
+.slot i{flex:none;width:14px;height:26px;border-radius:3px;border:2px solid var(--ink)}
+.slot input{flex:1;min-width:0;font:600 1rem var(--body);color:var(--ink);background:#fff;border:2px solid var(--ink);border-radius:6px;padding:9px 10px}
+.slot input::placeholder{color:#a3a89c;font-weight:400}
+input:focus-visible,button:focus-visible,.filebtn:focus-within{outline:3px solid var(--pink);outline-offset:2px}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:16px}
+button,.filebtn{font-family:var(--display);font-size:1.15rem;letter-spacing:.03em;border:2px solid var(--ink);border-radius:8px;padding:10px 22px;cursor:pointer;
+  background:var(--flag);color:var(--ink);box-shadow:0 4px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+button:hover,.filebtn:hover{transform:translateY(-1px);box-shadow:0 5px 0 var(--ink)}
+button:active,.filebtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+button.ghost,.filebtn{background:#fff;font-size:1rem}
+button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:0 4px 0 var(--ink)}
+.filebtn{position:relative;display:inline-block;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.thumbs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.thumbs:empty{display:none}
+.thumb{position:relative;width:66px}
+.thumb img{display:block;width:66px;height:88px;object-fit:cover;border:2px solid var(--ink);border-radius:4px}
+.thumb button{position:absolute;top:-8px;right:-8px;width:24px;height:24px;padding:0;border-radius:50%;font:700 14px/1 var(--body);background:var(--red);color:#fff;box-shadow:none}
+.note{color:var(--ink-soft);font-size:.9rem}
+.rig{display:flex;align-items:flex-start;gap:10px;margin-top:18px;padding:12px;border:2px dashed var(--ink);border-radius:8px;cursor:pointer}
+.rig input{flex:none;width:22px;height:22px;margin:0;accent-color:var(--jacket)}
+.caps{background:var(--jacket);color:#fff;border:3px solid var(--flag);border-radius:10px;padding:18px;text-align:center}
+.caps p{margin:0;font-family:var(--cond);font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--flag)}
+.caps .pair{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:4px 18px;margin:6px 0 14px;
+  font-family:var(--display);font-size:clamp(1.7rem,7vw,3rem);line-height:1.1;overflow-wrap:anywhere}
+.caps .amp{font-size:.5em;color:var(--flag)}
+.caps .actions{justify-content:center;margin-top:0}
+.caps p.savenote{margin-top:12px;font-family:var(--body);font-weight:600;letter-spacing:0;text-transform:none;color:#fff}
+ol.rows{list-style:none;margin:10px 0 0;padding:0;border-top:2px solid var(--ink)}
+.row{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--rule)}
+.pos{flex:none;width:2rem;height:2rem;display:grid;place-items:center;border:2px solid var(--ink);border-radius:4px;background:#fff;
+  font-family:var(--cond);font-weight:700;font-size:1.25rem;font-variant-numeric:tabular-nums}
+.chip{flex:none;width:12px;height:2rem;border-radius:3px;border:2px solid var(--ink)}
+.who{flex:1;min-width:0}
+.who b{display:block;font-family:var(--cond);font-weight:700;font-size:1.3rem;line-height:1.1;text-transform:uppercase;letter-spacing:.03em;overflow-wrap:anywhere}
+.who small{display:block;color:var(--ink-soft);font-size:.86rem}
+.stat{flex:none;max-width:46%;text-align:right;font-family:var(--cond);font-weight:700;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;
+  font-variant-numeric:tabular-nums;color:var(--ink-soft)}
+.stat.good{color:#b3186a}.stat.bad{color:var(--red)}
+@media (max-width:560px){.row{flex-wrap:wrap;row-gap:2px}.stat{flex-basis:100%;max-width:none;text-align:left;padding-left:calc(2rem + 32px)}}
+.row.cap .pos{background:var(--jacket);color:var(--flag)}
+.row.cap .stat{color:var(--jacket)}
+</style>
+<script src="lib/mp4-muxer.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow" id="eyebrow">Hole 19 · Par 5 · 600 yards</p>
+      <h1>Farmer's Invitational</h1>
+    </div>
+    <p class="sub" id="sub">First two carts to the green are your captains. Everyone else gets drafted.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Game">
+    <button type="button" role="tab" id="tabRace" aria-selected="true">Cart race</button>
+    <button type="button" role="tab" id="tabPar3" aria-selected="false">Par 3 shootout</button>
+    <button type="button" id="speed" class="speed" aria-label="Playback speed">Speed 1×</button>
+  </div>
+
+  <div class="stage" id="stage">
+    <canvas id="cv" aria-label="Golf cart race down the fairway"></canvas>
+    <div class="cut" id="cut" hidden><b id="cutT"></b><span id="cutN"></span></div>
+    <figure class="pin" id="pin" hidden><img id="pinImg" alt="Cart girl"><figcaption id="pinCap"></figcaption></figure>
+    <div class="count" id="count" hidden></div>
+  </div>
+
+  <div class="ticker" aria-live="polite">
+    <span class="tag">Whisper cam</span>
+    <p id="say">Quiet on the tee, please. Enter the field, then send them.</p>
+  </div>
+
+  <section class="caps" id="caps" hidden>
+    <p id="capsLabel">Your captains</p>
+    <div class="pair" id="pair"></div>
+    <div class="actions">
+      <button id="again" type="button">Run it back</button>
+      <button id="edit" type="button" class="ghost">Change the field</button>
+      <button id="playoff" type="button" hidden>Start the playoff</button>
+      <button id="save" type="button" class="ghost" hidden disabled>Finishing video…</button>
+    </div>
+    <p class="savenote" id="saveNote" hidden></p>
+  </section>
+
+  <section class="panel" id="setup">
+    <h2>Enter the field</h2>
+    <p class="hint" id="hint1">Two to eight names. The race runs about two minutes and is pure luck, same odds for everybody. The carts above are an example field until you add names.</p>
+    <form id="form" autocomplete="off">
+      <div class="names" id="names"></div>
+      <h3>Cart girl photos</h3>
+      <p class="hint">One drops in every time the cart girl hands out a boost. Nine are built in. You can add up to 8 more here; those are saved on this device only.</p>
+      <div class="thumbs" id="thumbs"></div>
+      <label class="filebtn">Add photos<input type="file" id="pics" accept="image/*" multiple></label>
+      <label class="rig"><input type="checkbox" id="musicOn" checked> <span><b>Background music</b>: banjo track during the race and in the saved video.</span></label>
+      <label class="rig" id="rigRow"><input type="checkbox" id="rig"> <span><b>Scripted three-way tie</b> (cart race only): the first three names finish in a dead heat, one event at a time, extra cart girls.</span></label>
+      <div class="actions">
+        <button id="go" type="submit">Tee off</button>
+        <span class="note" id="need">Add at least two names.</span>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel" id="boardPanel" hidden>
+    <h2 id="boardTitle">Leaderboard</h2>
+    <ol class="rows" id="rows"></ol>
+  </section>
+</div>
+
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const COLORS = ['#e23d3d','#2f6fe0','#f5c518','#f08a24','#8e52d9','#f4f1e8','#23262b','#19b5a5'];
+const DEMO = ['Drew','Zach','Emmett','Gabe','Klein','Will','Mud','Ben'];
+const L = 8400, YD = L / 600, BASE = 100, TOP = 54;
+
+const SCOUT = [
+  'Claims a 12. Plays to a 24.',
+  'Longest drive of the trip will be to the liquor store.',
+  'Owns a $600 driver and a $6 swing.',
+  'Has never once replaced a divot.',
+  'Takes a breakfast ball, a lunch ball and a dinner ball.',
+  'Career highlight: one par, 2019.',
+  'Calls every putt inside eight feet "good."',
+  'Dresses like a tour pro. Swings like a tour bus.',
+  'Will blame the rental clubs.',
+  'Strongest club in the bag is the pencil.',
+  'Hits it 300. 150 out, 150 sideways.',
+  'Yells "get in the hole" on a par 5 tee shot.',
+  'Gets one lesson a year. Ignores it by the third hole.',
+  'Three-putts from anywhere, including the bar.'
+];
+
+// mul = speed multiplier while the event runs
+const EV = {
+  cartgirl:{good:1,label:'CART GIRL!',dur:3.6,mul:1.9,lines:[
+    "The cart girl just called {n} 'sweetie.' {n} has never driven faster or tipped worse.",
+    "{n} tipped $40 on a $7 transfusion and got a wink. Money well spent.",
+    "The cart girl laughed at {n}'s joke. It wasn't funny. {n} is now invincible.",
+    "{n} just asked the cart girl what time she gets off. Bold. Doomed. Fast."]},
+  hotdog:{good:1,label:'TURN DOG',dur:3.6,mul:1.7,lines:[
+    "{n} took down a turn dog in two bites. No chewing. Now running on pure gas.",
+    "Turn dog and a tall boy for {n}. The exhaust note back there is unholy."]},
+  tailwind:{good:1,label:'TAILWIND',dur:3.6,mul:1.6,lines:[
+    "Two-club wind behind {n}. Finally something on this trip is helping.",
+    "{n} caught a tailwind. There goes the hat. Worth it."]},
+  footwedge:{good:1,label:'FOOT WEDGE',dur:1.1,mul:2.8,lines:[
+    "{n} with the foot wedge. Nobody saw that. Everybody saw that.",
+    "{n} found a much better lie. Funny how that keeps happening."]},
+  fireball:{good:1,label:'TRANSFUSION',dur:2.8,mul:2,lines:[
+    "{n} just put down a Transfusion in one pull. Vodka, ginger ale, grape juice and bad intentions.",
+    "That's Transfusion number four for {n}. The swing is looser. So is everything else."]},
+  bunker:{label:'BUNKER',dur:3.8,mul:.08,lines:[
+    "{n} is on the beach. Count the strokes with me. The ball is somehow further back.",
+    "{n} in the bunker. Bring a rake and a therapist."]},
+  water:{label:'WATER',dur:3.8,mul:.1,lines:[
+    "{n} is wet. Deepest {n} has been in anything all year.",
+    "Splash. {n} will be dropping. Again. Hitting five."]},
+  slowplay:{label:'SLOW GROUP',dur:4,mul:.12,lines:[
+    "{n} is stuck behind a foursome plumb-bobbing a putt for triple bogey.",
+    "The group ahead of {n} is taking practice swings. Plural. Each."]},
+  marshal:{label:'MARSHAL',dur:3.2,mul:0,lines:[
+    "The marshal has pulled {n} over. Pace of play. Also the open container. Containers.",
+    "{n} is getting a talking-to from a 74-year-old volunteer named Gary, who has all day."]},
+  goose:{label:'GEESE!',dur:2.8,mul:-.7,lines:[
+    "The geese have chosen violence. {n} is in full retreat.",
+    "{n} versus three geese. The geese are heavy favorites and it's not that close."]},
+  shank:{label:'SHANK',dur:3,mul:.3,lines:[
+    "{n} caught the hosel. We do not say the word. We do NOT say the word.",
+    "Dead sideways from {n}. That one's on the next fairway. And the one after."]},
+  battery:{label:'DEAD BATTERY',dur:3.6,mul:.12,lines:[
+    "{n}'s cart just died. Much like {n}'s short game. Get out and push.",
+    "Dead battery for {n}. The cart has seen enough."]},
+  porta:{label:'PORTA-JOHN',dur:3.6,mul:0,lines:[
+    "{n} to the porta-john at a dead sprint. The turn dog is fighting back.",
+    "{n} is in the blue box. Light a candle. Light several."]},
+  lostball:{label:'LOST BALL',dur:3.2,mul:0,lines:[
+    "{n} is looking for a ball that went 40 yards out of bounds. 'It should be right around here.'",
+    "{n} is hunting a brand-new Pro V1. The ball is gone. The dignity went with it."]},
+  hangover:{label:'HANGOVER',dur:3.4,mul:.2,lines:[
+    "Last night's tequila just caught up with {n}. That's a two-stroke penalty and a ruined cart.",
+    "{n} is yakking in the fescue. Play through."]}
+};
+const GOOD = Object.keys(EV).filter(k => EV[k].good), BAD = Object.keys(EV).filter(k => !EV[k].good);
+const LEAD = ["New leader: {n}. Nobody is more surprised than {n}.","{n} takes the lead. Enjoy it. It never lasts.","{n} out front, driving it like a rental. It is a rental."];
+const PINCAP = ['Drink up, {n}','This one is on the house, {n}','Looking thirsty, {n}','Need anything else, {n}?','Back for a third, {n}?','Keep the change, {n}'];
+
+/* house illustration, used until the user adds photos */
+const HOUSE = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+<rect width="300" height="400" fill="#ff8fbf"/>
+<g fill="#ffb3d3">${[0,1,2,3,4,5,6,7].map(i => `<path transform="rotate(${i * 45} 150 170)" d="M150 170 L120 -200 L180 -200Z"/>`).join('')}</g>
+<path d="M82 160 Q72 48 150 46 Q228 48 218 160 L244 338 Q150 372 56 338Z" fill="#f2c94c"/>
+<path d="M92 170 Q84 250 70 330 L100 338 Q104 250 108 180Z M208 170 Q216 250 230 330 L200 338 Q196 250 192 180Z" fill="#e0b233"/>
+<rect x="134" y="200" width="32" height="52" fill="#e9b48a"/>
+<path d="M52 400 Q58 276 118 252 L150 262 L182 252 Q242 276 248 400Z" fill="#fff"/>
+<path d="M118 252 L150 312 L182 252 Q150 268 118 252Z" fill="#f0c39a"/>
+<path d="M118 252 L104 266 L138 300 L150 312Z M182 252 L196 266 L162 300 L150 312Z" fill="#ff5fa2"/>
+<ellipse cx="150" cy="150" rx="47" ry="58" fill="#f0c39a"/>
+<path d="M103 140 Q108 92 150 90 Q192 92 197 140 Q175 108 150 110 Q125 108 103 140Z" fill="#f2c94c"/>
+<path d="M100 122 Q150 74 200 122 L200 132 Q150 96 100 132Z" fill="#fff"/>
+<path d="M96 128 Q150 98 222 122 Q160 116 98 140Z" fill="#ff5fa2"/>
+<rect x="110" y="140" width="36" height="24" rx="10" fill="#1d1d24"/><rect x="154" y="140" width="36" height="24" rx="10" fill="#1d1d24"/>
+<rect x="144" y="146" width="12" height="5" fill="#1d1d24"/>
+<path d="M116 146 l10 0 l-8 12Z M160 146 l10 0 l-8 12Z" fill="#5a5a6a"/>
+<path d="M128 182 Q150 204 172 182 Q150 190 128 182Z" fill="#fff" stroke="#d8342c" stroke-width="5" stroke-linejoin="round"/>
+<path d="M226 400 Q250 320 262 250 L282 256 Q276 340 262 400Z" fill="#f0c39a"/>
+<rect x="246" y="186" width="44" height="74" rx="8" fill="#e8e8ee"/><rect x="246" y="208" width="44" height="26" fill="#ffd23f"/>
+<rect x="254" y="180" width="28" height="8" rx="3" fill="#c9c9d2"/>
+<path d="M240 240 q30 -12 56 0 l-2 26 q-26 12 -52 0Z" fill="#f0c39a"/>
+</svg>`);
+
+/* ---------- state ---------- */
+let state = 'setup', carts = [], decals = [], parts = [], camX = -90, T = 0;
+let finished = 0, leader = null, secondAt = 0, sayUntil = 0, boardAt = 0;
+let mode = 'race', p3 = null, p3parts = [];
+// show = the scripted cut: one event at a time, extra cart girls, and the first three carts finish in a dead heat
+let show = false, dir = null, tie = null, tieResult = null, playoff = null, flash = 0, autoPO = false;
+let spot = null, spotCool = 0, zoom = 1, zx = 0, zy = 0, shake = 0, storm = null, stormX = 0, stormDone = false, driveAt = [], rateF = 1;
+
+/* ---------- setup form ---------- */
+const namesEl = $('names');
+let saved = [];
+try { saved = JSON.parse(localStorage.getItem('cpc-names') || '[]') || []; } catch (e) {}
+if (!saved.some(s => typeof s === 'string' && s.trim())) saved = ['Drew', 'Zach', 'Emmett'];
+for (let i = 0; i < 8; i++) {
+  const d = document.createElement('label');
+  d.className = 'slot';
+  d.innerHTML = `<i style="background:${COLORS[i]}"></i><input id="name${i}" maxlength="14" placeholder="${DEMO[i]}" aria-label="Player ${i + 1}">`;
+  namesEl.appendChild(d);
+  d.querySelector('input').value = typeof saved[i] === 'string' ? saved[i].slice(0, 14) : '';
+}
+const inputs = [...namesEl.querySelectorAll('input')];
+const entered = () => playoff && mode === 'par3' ? playoff : inputs.map((el, i) => ({name: el.value.trim(), color: COLORS[i]})).filter(p => p.name);
+
+/* cart girl photos: resized in the browser, kept on this device */
+const BUILTIN = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `girls/${n}.jpg`).sort(() => Math.random() - .5);
+let girls = [], pinI = 0, pinSide = 0, pinTO = 0, pinT0 = 0, pinUntil = 0;
+try { girls = (JSON.parse(localStorage.getItem('cpc-girls') || '[]') || []).filter(s => typeof s === 'string' && s.startsWith('data:image/')); } catch (e) {}
+function saveGirls() { try { localStorage.setItem('cpc-girls', JSON.stringify(girls)); } catch (e) {} }
+function renderThumbs() {
+  const el = $('thumbs'); el.innerHTML = '';
+  girls.forEach((src, i) => {
+    const d = document.createElement('div'); d.className = 'thumb';
+    const im = document.createElement('img'); im.src = src; im.alt = 'Cart girl photo ' + (i + 1);
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = '×'; b.setAttribute('aria-label', 'Remove photo ' + (i + 1));
+    b.onclick = () => { girls.splice(i, 1); saveGirls(); renderThumbs(); };
+    d.append(im, b); el.appendChild(d);
+  });
+}
+$('pics').addEventListener('change', async e => {
+  for (const f of [...e.target.files]) {
+    if (girls.length >= 8) break;
+    try {
+      const url = URL.createObjectURL(f), im = new Image();
+      await new Promise((ok, no) => { im.onload = ok; im.onerror = no; im.src = url; });
+      const sc = Math.min(1, 640 / Math.max(im.width, im.height)), c = document.createElement('canvas');
+      c.width = Math.round(im.width * sc); c.height = Math.round(im.height * sc);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      girls.push(c.toDataURL('image/jpeg', .82)); URL.revokeObjectURL(url);
+    } catch (err) {}
+  }
+  e.target.value = ''; saveGirls(); renderThumbs();
+});
+renderThumbs();
+function showPin(c, cap) {
+  window.__pins = (window.__pins || 0) + 1; window.__shanked = carts.map(c => c.shanked);
+  const list = [...girls, ...BUILTIN], el = $('pin'), im = $('pinImg');
+  im.onerror = () => { im.onerror = null; im.src = HOUSE; };
+  im.src = list[pinI++ % list.length];
+  $('pinCap').textContent = (cap || pick(PINCAP)).replace('{n}', c ? c.name : '');
+  pinSide ^= 1; el.className = 'pin' + (pinSide ? ' left' : ''); el.hidden = false; void el.offsetWidth; el.classList.add('show');
+  pinT0 = performance.now(); pinUntil = pinT0 + 3400;
+  clearTimeout(pinTO); pinTO = setTimeout(() => { el.hidden = true; }, 3400);
+}
+
+function buildCarts(list) {
+  const scouts = [...SCOUT].sort(() => Math.random() - .5);
+  carts = list.map((p, i) => ({name: p.name, color: p.color, lane: i, x: 40, v: 1, vt: 1, roll: 0, ev: null, cool: rnd(2, 5),
+    place: 0, spd: 0, wheel: 0, rank: i, scout: scouts[i], parkX: 0, shanked: false, shankAt: rnd(.12, .7) * L}));
+  decals = []; parts = []; finished = 0; leader = null; secondAt = 0; T = 0;
+  tie = null; flash = 0;
+  const sh = a => [...a].sort(() => Math.random() - .5), others = sh(BAD.filter(t => t !== 'shank')), bag = [];
+  sh(carts).forEach(c => bag.push({c, type: 'shank'}));
+  dir = {gap: 3, n: 0, rot: sh(carts), gi: 0, bi: 0, bag: bag.concat(others.map(type => ({type})))};
+  spot = null; spotCool = 2; zoom = 1; shake = 0; storm = null; stormDone = false; stormX = rnd(.4, .56) * L;
+  driveAt = [rnd(.1, .16), rnd(.26, .34), rnd(.64, .72), rnd(.8, .86)].map(f => f * L); rateF = clamp(6 / Math.max(1, list.length), 1, 2);
+  $('cut').hidden = true; $('pin').hidden = true;
+}
+function preview() {
+  p3 = null; p3parts = []; musicStop(0);
+  const list = entered();
+  $('go').disabled = list.length < 2;
+  $('need').hidden = list.length >= 2;
+  buildCarts(list.length ? list : DEMO.map((name, i) => ({name, color: COLORS[i]})));
+}
+inputs.forEach(el => el.addEventListener('input', () => {
+  playoff = null; preview();
+  try { localStorage.setItem('cpc-names', JSON.stringify(inputs.map(e => e.value))); } catch (e) {}
+}));
+$('form').addEventListener('submit', e => { e.preventDefault(); if (entered().length >= 2) startRace(); });
+$('again').addEventListener('click', () => { if (autoPO) setMode('race'); startRace(); });
+$('edit').addEventListener('click', () => {
+  playoff = null; if (autoPO) setMode('race');
+  recStop(true); updateSave();
+  state = 'setup'; $('caps').hidden = true; $('boardPanel').hidden = true; $('setup').hidden = false;
+  preview(); say('Quiet on the tee, please. Enter the field, then send them.', true);
+});
+
+function say(t, force) {
+  const now = performance.now();
+  if (!force && now < sayUntil) return;
+  const el = $('say'); el.textContent = t; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  sayUntil = now + (force ? 3400 : 2600);
+}
+const line = (arr, c) => pick(arr).replaceAll('{n}', c.name);
+
+function startRace() {
+  buildCarts(entered());
+  if (mode === 'par3') p3Init(); else p3 = null;
+  tieResult = null;
+  state = 'countdown'; camX = -90; pinUntil = 0; musicPlay(mode === 'par3' ? 'epic' : 'banjo'); recStart();
+  $('setup').hidden = true; $('caps').hidden = true; $('boardPanel').hidden = false; $('boardTitle').textContent = 'Scouting report';
+  renderBoard();
+  $('stage').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+  say("Welcome to the Farmer's Invitational, where the stakes are low and the blood alcohol is not.", true);
+  const steps = ['3', '2', '1', 'FORE!'], el = $('count');
+  let i = 0; el.hidden = false;
+  (function tick() {
+    if (state !== 'countdown') { el.hidden = true; return; }
+    el.textContent = steps[i];
+    if (i === 3) {
+      state = 'race'; $('boardTitle').textContent = mode === 'par3' ? 'Closest to the pin' : 'Leaderboard';
+      say(mode === 'par3' ? (playoff ? 'Playoff. Three players, one swing each, two captain spots.' : 'One swing each. 150 yards. Try to keep it on the planet.') : "And they're off. Six hundred yards of bad decisions.", true);
+      setTimeout(() => { el.hidden = true; }, 700);
+    } else { i++; setTimeout(tick, 800); }
+  })();
+}
+
+/* ---------- featured moments: slow-mo, zoom, cut-in banner ---------- */
+function feature(c, title, good, force, sub) {
+  if (!force && (spot || spotCool > 0)) return false;
+  const x = sx(c.x);
+  spot = {c, t: 0, dur: force ? 1.9 : 1.5, zoom: x > 30 && x < cw - 30, title, sub: sub || c.name, good, lo: laneY(c.lane) < TOP + (ch - TOP) / 2};
+  $('cutT').textContent = title; $('cutN').textContent = sub || c.name;
+  const el = $('cut');
+  el.className = 'cut ' + (good ? 'good ' : '') + (laneY(c.lane) < TOP + (ch - TOP) / 2 ? 'lo' : 'hi');
+  el.hidden = false; void el.offsetWidth; el.classList.add('in');
+  return true;
+}
+
+/* ---------- simulation ---------- */
+function trigger(c, forced) {
+  const n = carts.length;
+  // leader's curse: the further back you are, the more likely the event is a boost
+  const pGood = .3 + .2 * (c.rank / Math.max(1, n - 1));
+  const type = forced || (Math.random() < pGood ? (Math.random() < .5 ? 'cartgirl' : pick(GOOD)) : pick(BAD)), d = EV[type];
+  if (type === 'shank') c.shanked = true;
+  c.ev = {type, t: 0, dur: d.dur * rnd(.9, 1.15)};
+  if (type === 'bunker' || type === 'water') decals.push({type, x: c.x + 14, lane: c.lane});
+  if (type === 'porta') decals.push({type, x: c.x + 46, lane: c.lane, until: T + c.ev.dur});
+  const big = feature(c, d.label, d.good, show);
+  if (!d.good) shake = Math.max(shake, big ? 9 : 4);
+  if (type === 'cartgirl') showPin(c);
+  if (type === 'hotdog') showPin(c, pick(['One turn dog for {n}', 'Extra relish, {n}?']));
+  if (type === 'fireball') showPin(c, pick(['One Transfusion for {n}', 'Another Transfusion, {n}?']));
+  say(line(d.lines, c), big);
+  fx(c, 0, true);
+}
+function driveBy() {
+  const live = carts.filter(c => !c.place);
+  live.forEach(c => { c.ev = {type: 'cartgirl', t: 0, dur: 3.2}; fx(c, 0, true); });
+  feature(live[0], 'BEVERAGE CART RUN', true, true, 'Drinks for everybody'); spot.zoom = false;
+  showPin(null, pick(['Drinks for everybody', 'Who is thirsty?', 'Round on the house']));
+  say('The beverage cart is making a pass. Wallets out, shoulders back, everybody act natural.', true);
+}
+function startStorm() {
+  stormDone = true;
+  const lucky = pick(carts.filter(c => !c.place));
+  lucky.ev = null; storm = {t: 0, dur: 3.4, lucky};
+  feature(lucky, 'LIGHTNING DELAY', false, true, 'Everybody off. Except ' + lucky.name); spot.zoom = false;
+  shake = 12;
+  say(`There's the horn. Everybody off the course. ${lucky.name} "didn't hear it" and is playing through.`, true);
+}
+function finish(c) {
+  const n = carts.length;
+  c.place = ++finished; c.ev = null; c.x = L;
+  c.parkX = L + 60 + (n - c.place) * (210 / Math.max(1, n - 1));
+  if (c.place <= 2) {
+    for (let i = 0; i < 70; i++) parts.push({x: L + rnd(-10, 60), y: laneY(c.lane) - 20, vx: rnd(-120, 120), vy: rnd(-260, -60), g: 340,
+      life: rnd(1.4, 2.6), size: rnd(3, 6), color: pick(['#ffd23f', '#ff5fa2', '#fff', '#2f6fe0', '#e23d3d'])});
+    feature(c, 'CAPTAIN NO. ' + c.place, true, true);
+    showPin(c, pick(['Congrats, Captain {n}', 'First round is on Captain {n}']));
+    say(c.place === 1 ? `${c.name} is on the green first! Captain number one. God help that team.`
+      : `${c.name} takes the second captaincy. A born leader. Of what, unclear.`, true);
+    if (c.place === 2 || n === 2) secondAt = T;
+  }
+  if (finished === n) setTimeout(endRace, 1600);
+}
+function endRace() {
+  if (state !== 'race') return;
+  state = 'done'; spot = null; $('cut').hidden = true; tieResult = null;
+  $('capsLabel').textContent = 'Your captains'; $('playoff').hidden = true;
+  const order = [...carts].sort((a, b) => a.place - b.place);
+  $('pair').innerHTML = `<span>${esc(order[0].name)}</span><span class="amp">&amp;</span><span>${esc(order[1].name)}</span>`;
+  $('caps').hidden = false; $('boardTitle').textContent = 'Final results';
+  say(`Your captains: ${order[0].name} and ${order[1].name}. Let the draft begin.`, true);
+  renderBoard(); rec.tail = performance.now() + 4500; musicStop(4500);
+  $('caps').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+}
+
+/* the scripted cut: one event at a time with a breather between, so it can be narrated */
+function director(dt, lead) {
+  const d = dir, n = carts.length;
+  if (!tie && n >= 3 && lead > L - 950 && !storm && !carts.some(c => c.ev)) {
+    const tc = carts.slice(0, 3), mean0 = tc.reduce((a, c) => a + c.x, 0) / 3;
+    tie = {carts: tc, T0: T, dur: (L - mean0) / BASE, mean0, x0: tc.map(c => c.x), ph: tc.map(() => Math.random()), done: false};
+    say('Six hundred yards and nobody can shake anybody. This is coming down to the wire.', true);
+    return;
+  }
+  if (tie || storm || spot || carts.some(c => c.ev)) { d.gap = rnd(1.5, 2.1); return; }
+  if (lead < 250 || lead > L - (n >= 3 ? 1150 : 420) || finished) return;
+  d.gap -= dt; if (d.gap > 0) return;
+  const i = d.n++, slot = i % 5;
+  if (i === 8 && !stormDone) return startStorm();
+  if (slot === 2) return driveBy();
+  if (slot === 0 || slot === 4) return trigger(d.rot[d.gi++ % n], pick(['cartgirl', 'cartgirl', 'cartgirl', 'hotdog', 'fireball']));
+  if (!d.bag.length) d.bag = BAD.filter(t => t !== 'shank').sort(() => Math.random() - .5).map(type => ({type}));
+  const h = d.bag.shift();
+  trigger(h.c || d.rot[d.bi++ % n], h.type);
+}
+function tieFinish() {
+  const n = carts.length, names = tie.carts.map(c => c.name);
+  tie.done = true; finished = n;
+  let next = 4;
+  for (const c of carts) {
+    const tied = tie.carts.includes(c);
+    c.ev = null; c.place = tied ? 1 : next++; c.parkX = tied ? L + 200 : L + 60;
+    if (tied) { c.x = L; for (let i = 0; i < 50; i++) parts.push({x: L + rnd(-10, 60), y: laneY(c.lane) - 20, vx: rnd(-120, 120), vy: rnd(-260, -60), g: 340,
+      life: rnd(1.4, 2.6), size: rnd(3, 6), color: pick(['#ffd23f', '#ff5fa2', '#fff', '#2f6fe0', '#e23d3d'])}); }
+  }
+  flash = 1; shake = 14;
+  feature(tie.carts[1], 'THREE-WAY TIE', true, true, names.join(' · ')); spot.zoom = false; spot.dur = 2.8;
+  showPin(null, 'Too close to call');
+  say(`I do not believe it. A three-way dead heat: ${names[0]}, ${names[1]} and ${names[2]}. We are going to a playoff.`, true);
+  setTimeout(toPlayoff, 3800);
+}
+function toPlayoff() {
+  if (state !== 'race' || !tie) return;
+  const list = tie.carts.map(c => ({name: c.name, color: c.color}));
+  mode = 'par3'; playoff = list; autoPO = true;
+  $('tabRace').setAttribute('aria-selected', false); $('tabPar3').setAttribute('aria-selected', true);
+  $('eyebrow').textContent = MODES.par3.eyebrow; $('sub').textContent = MODES.par3.sub;
+  buildCarts(list); p3Init(); p3.phase = 'intro'; flash = 1;
+  $('boardTitle').textContent = 'Playoff: closest to the pin';
+  musicPlay('epic');
+  p3Banner('PLAYOFF', 'Closest to the pin · one swing each', true, 3);
+  say('We go to a playoff. Three players, one swing each, two captain spots.', true);
+  renderBoard();
+}
+function endTie() {
+  if (state !== 'race' || !tie) return;
+  state = 'done'; spot = null; $('cut').hidden = true; tieResult = tie.carts;
+  $('capsLabel').textContent = 'Three-way tie';
+  $('pair').innerHTML = tieResult.map(c => `<span>${esc(c.name)}</span>`).join('<span class="amp">&middot;</span>');
+  $('playoff').hidden = false; $('caps').hidden = false; $('boardTitle').textContent = 'Final results';
+  say('Three-way tie. Playoff: closest to the pin, one swing each.', true);
+  renderBoard(); rec.tail = performance.now() + 4500; musicStop(4500);
+  $('caps').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+}
+function step(dt) {
+  T += dt;
+  const order = [...carts].sort((a, b) => (a.place || 99) - (b.place || 99) || b.x - a.x);
+  order.forEach((c, i) => c.rank = i);
+  if (state === 'race' && T > 5 && !finished && !storm && order[0] !== leader) { if (leader) say(line(LEAD, order[0])); leader = order[0]; }
+  if (!leader) leader = order[0];
+  const lead = Math.max(...carts.map(c => c.x));
+  if (state === 'race' && show) director(dt, lead);
+  if (state === 'race' && !show && !stormDone && !finished && lead > stormX) startStorm();
+  if (state === 'race' && !show && !finished && !storm && driveAt.length && lead > driveAt[0]) { driveAt.shift(); driveBy(); }
+  if (storm) { storm.t += dt; if (storm.t >= storm.dur) storm = null; }
+  // stragglers get ten seconds after the second captain is in, then get waved up
+  if (state === 'race' && secondAt && T - secondAt > 10) order.forEach(c => { if (!c.place) finish(c); });
+  const live = carts.filter(c => !c.place), viewW = cw / k;
+  const mean = live.reduce((a, c) => a + c.x, 0) / Math.max(1, live.length);
+  for (const c of carts) {
+    if (c.place) { const d = (c.parkX - c.x) * Math.min(1, dt * 2.2); c.x += d; c.spd = dt ? d / dt : 0; c.wheel += d * .15; continue; }
+    if (state !== 'race') { c.spd = 0; continue; }
+    if (tie) {
+      const i = tie.carts.indexOf(c), u = Math.min(1, (T - tie.T0) / tie.dur);
+      let nx;
+      if (i >= 0) nx = tie.mean0 + (L - tie.mean0) * u + (tie.x0[i] - tie.mean0) * Math.pow(1 - u, 1.5) + 35 * Math.sin(6.283 * (u * 2 + tie.ph[i])) * (1 - u) * Math.min(1, u * 6);
+      else nx = Math.min(c.x + BASE * .9 * dt, Math.min(...tie.carts.map(t => t.x)) - 90);
+      c.spd = dt ? (nx - c.x) / dt : 0; c.x = nx; c.wheel += c.spd * dt * .15; c.ev = null;
+      continue;
+    }
+    if (storm) {
+      if (c !== storm.lucky) { c.spd = 0; continue; }
+      c.spd = BASE * 1.35; c.x += c.spd * dt; c.wheel += c.spd * dt * .15;
+      if (c.x >= L) finish(c);
+      continue;
+    }
+    c.roll -= dt;
+    if (c.roll <= 0) { c.vt = rnd(.82, 1.18); c.roll = rnd(.8, 2.2); }
+    c.v += (c.vt - c.v) * Math.min(1, dt * 2);
+    let mul = 1;
+    if (c.ev) {
+      c.ev.t += dt; mul = EV[c.ev.type].mul; fx(c, dt, false);
+      if (c.ev.t >= c.ev.dur) { c.ev = null; c.cool = rnd(2, 5) / Math.sqrt(rateF); }
+    } else if (show) {
+      // the director hands out events one at a time
+    } else if (finished < 2 && !c.shanked && c.x > c.shankAt) {
+      trigger(c, 'shank');
+    } else if (finished < 2) {
+      c.cool -= dt;
+      if (c.cool <= 0 && c.x > 200 && c.x < L - 420 && Math.random() < dt * .35 * rateF) trigger(c);
+    } else mul = 2.2;
+    c.spd = BASE * c.v * mul;
+    // elastic pack: same rule for every cart, so the odds stay even
+    if (mul >= 1 && finished < 2) c.spd += BASE * .6 * clamp((mean - c.x) / (viewW * .3), -1, 1.6);
+    c.x = Math.max(0, c.x + c.spd * dt);
+    c.wheel += c.spd * dt * .15;
+    if (c.x >= L) finish(c);
+  }
+  if (tie && !tie.done && T - tie.T0 >= tie.dur) tieFinish();
+  for (const p of parts) { p.life -= dt; p.x += p.vx * dt / k; p.y += p.vy * dt; p.vy += (p.g || 0) * dt; }
+  parts = parts.filter(p => p.life > 0);
+  const target = state === 'setup' || state === 'countdown' ? -90 : clamp(Math.max((lead + Math.min(...(live.length ? live : carts).map(c => c.x))) / 2 - viewW / 2, lead - viewW * .82), -90, L + 340 - viewW);
+  window.__cpc = {state, evs: carts.filter(c => c.ev).map(c => c.ev.type), off: live.filter(c => sx(c.x) < 10).length, spread: live.length ? (lead - Math.min(...live.map(c => c.x))) / viewW : 0};
+  camX += (target - camX) * Math.min(1, dt * 3);
+}
+
+/* particle theatrics for the running event; start = the moment it triggers */
+function fx(c, dt, start) {
+  const e = c.ev, t = e.type, y = laneY(c.lane), r = n => Math.random() < dt * n;
+  const P = o => parts.push(Object.assign({x: c.x, y: y - 10 * S, vx: 0, vy: 0, life: .8, size: 3 * S}, o));
+  const B = (n, f) => { for (let i = 0; i < n; i++) P(f()); };
+  const shout = (txt, color, size) => P({y: y - 58 * S, vy: -34, life: 1.1, txt, size: Math.max(11, (size || 16) * S), color: color || '#fff'});
+  e.pulse = (e.pulse || 0) - dt;
+  const beat = !start && e.pulse <= 0;
+  const sand = () => ({vx: rnd(-130, 60), vy: rnd(-260, -60), g: 420, color: pick(['#ead9a0', '#d9c583']), size: rnd(2, 5) * S, life: 1.1});
+  const drop = () => ({vx: rnd(-110, 110), vy: rnd(-300, -80), g: 420, color: pick(['#bfe6ff', '#7fc4f5', '#fff']), size: rnd(2, 5) * S, life: 1.1});
+  switch (t) {
+    case 'bunker':
+      if (start) { B(45, sand); e.pulse = .7; e.n = 1; }
+      if (beat) { e.pulse = .62; e.n++; B(18, sand); shout('STROKE ' + e.n, '#fff3c4'); shake = Math.max(shake, 3); }
+      break;
+    case 'water':
+      if (start) { B(60, drop); shout('SPLOOSH', '#dff3ff', 20); e.pulse = .9; }
+      if (beat) { e.pulse = .8; B(10, drop); shout(pick(['GLUG', 'GLUG GLUG', 'BLUB']), '#dff3ff', 13); }
+      if (r(8)) P({x: c.x + rnd(-20, 20), y: y - 4 * S, vy: -46, life: .9, size: rnd(1.5, 3) * S, color: 'rgba(255,255,255,.8)'});
+      break;
+    case 'cartgirl':
+      if (start) { B(26, () => ({x: c.x + rnd(-70, 30), y: y - rnd(10, 50) * S, vx: rnd(-40, 40), vy: rnd(-120, -40), life: 1.4, heart: 1, size: rnd(12, 22) * S, color: pick(['#ff5fa2', '#ff9cc6', '#fff'])})); shout('HEY HON', '#ffd6e8', 18); }
+      if (r(14)) P({x: c.x - rnd(0, 60), y: y - 40 * S, vx: rnd(-20, 20), vy: -44, life: 1.2, heart: 1, size: rnd(11, 18) * S, color: pick(['#ff5fa2', '#ff9cc6'])});
+      if (r(20)) P({x: c.x - rnd(30, 90), y: y - rnd(6, 34) * S, vx: 200, life: .3, streak: 1, color: 'rgba(255,95,162,.8)'});
+      break;
+    case 'fireball':
+      if (start) { shout('WOOOO!', '#e3c8ff', 20); B(30, () => ({vx: rnd(-200, 200), vy: rnd(-200, 40), life: .5, size: rnd(3, 7) * S, color: pick(['#7b3fb5', '#b06be0', '#e3c8ff'])})); }
+      if (r(70)) P({x: c.x - 26 * S / k, y: y - rnd(8, 18) * S, vx: rnd(-260, -80), vy: rnd(-40, 40), life: rnd(.3, .6), size: rnd(3, 8) * S, color: pick(['#7b3fb5', '#b06be0', '#e3c8ff', '#fff'])});
+      if (r(10)) P({x: c.x - 60 * S / k, y: y - 16 * S, vx: -40, vy: -30, life: 1, size: rnd(5, 9) * S, color: 'rgba(40,40,40,.4)'});
+      break;
+    case 'hotdog':
+      if (start) e.pulse = .8;
+      if (beat) { e.pulse = .5; shout(pick(['PFFFT', 'BRAAAP', 'TOOT', 'PBBBT']), '#e6d08a', 14);
+        B(14, () => ({x: c.x - 28 * S / k, y: y - 14 * S, vx: rnd(-170, -50), vy: rnd(-40, 30), life: rnd(.6, 1.1), size: rnd(5, 11) * S, color: pick(['rgba(150,160,70,.6)', 'rgba(120,110,60,.55)'])})); }
+      break;
+    case 'tailwind':
+      if (start) { shout('WHOOSH', '#fff', 18); P({y: y - 36 * S, vx: 120, vy: -160, g: 240, life: 1.6, size: 4.5 * S, color: c.color}); }
+      if (r(34)) P({x: c.x - rnd(40, 140), y: y - rnd(2, 46) * S, vx: 300, life: .35, streak: 1, color: 'rgba(255,255,255,.75)'});
+      if (r(12)) P({x: c.x - rnd(60, 140), y: y - rnd(0, 50) * S, vx: rnd(220, 320), vy: rnd(-40, 40), life: .8, size: 2.5 * S, color: pick(['#d98b2b', '#8fdc86', '#c96a3a'])});
+      break;
+    case 'footwedge':
+      if (start) { shout('PUNT!', '#ffd23f', 20); B(16, () => ({vx: rnd(-120, 40), vy: rnd(-120, -20), g: 300, life: .6, color: '#8fdc86'})); shake = Math.max(shake, 6); }
+      break;
+    case 'goose':
+      if (start) e.pulse = .3;
+      if (beat) { e.pulse = .42; P({x: c.x + rnd(40, 80) * S / k, y: y - rnd(30, 50) * S, vy: -24, life: .8, txt: pick(['HONK', 'HONK!', 'HISSS']), size: Math.max(11, 14 * S), color: '#fff'}); }
+      if (r(16)) P({x: c.x + rnd(20, 70) * S / k, y: y - rnd(8, 30) * S, vx: rnd(-60, 60), vy: rnd(-80, -10), g: 120, life: 1, size: 2.2 * S, color: '#f2f2ee'});
+      break;
+    case 'marshal':
+      if (start) e.pulse = .5;
+      if (beat) { e.pulse = .9; P({x: c.x + 50 * S / k, y: y - 54 * S, vy: -22, life: 1, txt: pick(['PACE OF PLAY!', 'LICENSE AND SCORECARD', 'WHILE WE ARE YOUNG']), size: Math.max(11, 13 * S), color: '#ffd23f'}); }
+      break;
+    case 'shank':
+      if (start) { shout('FARMED IT HARD. FORE!', '#ffd23f', 18); P({vx: 60, vy: -520, life: 1.2, size: 3 * S, color: '#fff'}); e.pulse = .9; }
+      if (beat) { e.pulse = 1; P({vx: rnd(-40, 80), vy: pick([-520, 520]), life: 1.2, size: 3 * S, color: '#fff'}); shout(pick(['AGAIN?!', 'FORE LEFT', 'FORE RIGHT']), '#ffd23f', 14); }
+      break;
+    case 'battery':
+      if (start) { shout('BZZT', '#ffe86b', 20); B(26, () => ({y: y - 20 * S, vx: rnd(-160, 160), vy: rnd(-200, 20), g: 300, life: .6, size: 2 * S, color: pick(['#ffe86b', '#fff'])})); }
+      if (r(14)) P({y: y - 26 * S, vx: rnd(-14, 14), vy: -46, life: 1.3, size: rnd(4, 9) * S, color: 'rgba(50,50,50,.5)'});
+      if (r(5)) P({y: y - 18 * S, vx: rnd(-120, 120), vy: rnd(-140, -20), g: 300, life: .4, size: 1.8 * S, color: '#ffe86b'});
+      break;
+    case 'porta':
+      if (start) e.pulse = .7;
+      if (beat) { e.pulse = .7; P({x: c.x + 46, y: y - 50 * S, vy: -24, life: 1, txt: pick(['PFFFT', 'OH NO', 'OH GOD', 'COURTESY FLUSH']), size: Math.max(11, 13 * S), color: '#cfe89a'}); }
+      if (r(12)) P({x: c.x + 46 + rnd(-10, 10), y: y - 42 * S, vx: rnd(-10, 10), vy: -36, life: 1.2, size: rnd(3, 7) * S, color: 'rgba(150,170,60,.55)'});
+      break;
+    case 'lostball':
+      if (r(3)) P({x: c.x - rnd(30, 70) * S / k, y: y - 36 * S, vy: -22, life: .8, txt: '?', size: Math.max(12, 18 * S), color: '#ffd23f'});
+      break;
+    case 'hangover':
+      if (start) shout('HURK', '#cfe89a', 20);
+      if (r(46)) P({x: c.x - 6 / k, y: y - 28 * S, vx: rnd(-150, -60), vy: rnd(-90, -10), g: 420, life: .8, size: rnd(2, 4.5) * S, color: pick(['#9bc53d', '#c9d94f', '#e0a83a'])});
+      break;
+    case 'slowplay':
+      if (start) { shout('WHILE WE ARE YOUNG!', '#fff', 14); e.pulse = 1.1; }
+      if (beat) { e.pulse = 1; P({x: c.x + rnd(50, 90) * S / k, y: y - 34 * S, vy: -18, life: 1.1, txt: pick(['one more practice swing', 'hmm...', 'is it my turn?', 'zzz']), size: Math.max(10, 12 * S), color: '#f6f3e7'}); }
+      break;
+  }
+}
+
+/* ---------- drawing ---------- */
+const cv = $('cv'), ctx = cv.getContext('2d');
+let cw = 800, ch = 500, k = 1, S = 1, laneH = 50, lanesTop = TOP;
+function resize() {
+  cw = $('stage').clientWidth || 800;
+  const base = clamp(cw * .085, 38, 60);
+  ch = Math.round(TOP + 8 * base + 10);
+  k = clamp(cw / 800, .55, 1.15);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr); cv.style.height = ch + 'px';
+  cv._dpr = dpr; cv._base = base;
+}
+function layout() {
+  const n = Math.max(carts.length, 2), base = cv._base, fairH = ch - TOP;
+  laneH = Math.min(base * 1.45, 8 * base / n);
+  lanesTop = TOP + (fairH - n * laneH) / 2;
+  S = laneH / 54;
+}
+const laneY = i => lanesTop + laneH * (i + 1) - laneH * .16;
+const sx = x => (x - camX) * k;
+const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill(); };
+const ell = (x, y, rx, ry) => { ctx.beginPath(); ctx.ellipse(x, y, Math.max(0, rx), Math.max(0, ry), 0, 0, 7); ctx.fill(); };
+const seg = (a, b, c, d) => { ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(c, d); ctx.stroke(); };
+const hash = i => { const v = Math.sin(i * 127.1) * 43758.5453; return v - Math.floor(v); };
+
+function drawCart(x, y, s, col, o = {}) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(s * (o.flip ? -1 : 1), s);
+  ctx.fillStyle = 'rgba(0,0,0,.22)'; ell(0, 1 - (o.lift || 0), 27, 4);
+  if (o.rot) { ctx.translate(0, -20); ctx.rotate(o.rot); ctx.translate(0, 20); }
+  ctx.translate(0, -(o.bob || 0));
+  if (o.cooler) { ctx.fillStyle = '#fff'; rr(-30, -31, 14, 16, 2); ctx.fillStyle = '#ff5fa2'; ctx.fillRect(-30, -25, 14, 3); }
+  else { ctx.fillStyle = '#4a3423'; rr(-28, -30, 7, 18, 2); ctx.strokeStyle = '#c9ccd1'; ctx.lineWidth = 1.5; seg(-26, -30, -29, -38); seg(-23, -30, -22, -39); }
+  ctx.strokeStyle = '#e9e6dc'; ctx.lineWidth = 2; seg(-17, -15, -16, -40); seg(15, -18, 13, -40);
+  ctx.fillStyle = o.roof || '#f7f5ee'; rr(-21, -44, 40, 5, 2);
+  if (!o.empty) {
+    if (o.hair) { ctx.fillStyle = '#f6d66b'; ell(-4, -30, 5, 7); }
+    ctx.fillStyle = o.shirt || '#fff'; rr(-7, -28, 11, 14, 3);
+    ctx.fillStyle = o.skin || '#f0c39a'; ell(-1, -32, 4.6, 4.6);
+    if (!o.hair) { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(-1, -33, 4.8, Math.PI, 0); ctx.fill(); ctx.fillRect(-1, -34, 8, 1.8); }
+    else { ctx.fillStyle = '#f6d66b'; ctx.beginPath(); ctx.arc(-1, -33, 4.9, Math.PI * .95, Math.PI * 1.9); ctx.fill(); }
+    ctx.strokeStyle = '#222'; ctx.lineWidth = 1.5; seg(3, -22, 10, -20);
+  }
+  ctx.fillStyle = col; rr(-24, -17, 48, 12, 4); rr(8, -21, 16, 9, 4);
+  ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(-24, -8, 48, 3);
+  if (o.light) { ctx.fillStyle = Math.floor(T * 6) % 2 ? '#ffb300' : '#7a5500'; ell(-4, -47, 4, 3); }
+  for (const wx of [-14, 15]) {
+    ctx.fillStyle = '#1b1b1b'; ell(wx, -5, 6, 6); ctx.fillStyle = '#b9bdc2'; ell(wx, -5, 2.6, 2.6);
+    ctx.strokeStyle = '#1b1b1b'; ctx.lineWidth = 1; const a = o.wheel || 0;
+    seg(wx - Math.cos(a) * 2.6, -5 - Math.sin(a) * 2.6, wx + Math.cos(a) * 2.6, -5 + Math.sin(a) * 2.6);
+  }
+  ctx.restore();
+}
+function drawGoose(x, y, s, ph) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(-s, s);
+  ctx.fillStyle = 'rgba(0,0,0,.2)'; ell(0, 1, 11, 3);
+  ctx.fillStyle = '#f2f2ee'; ell(0, -10, 11, 7);
+  ctx.strokeStyle = '#222'; ctx.lineWidth = 3.5; seg(8, -13, 13, -26);
+  ctx.fillStyle = '#222'; ell(14, -27, 3.5, 3); ctx.fillStyle = '#f08a24';
+  ctx.beginPath(); ctx.moveTo(17, -28); ctx.lineTo(23, -26); ctx.lineTo(17, -25); ctx.fill();
+  ctx.fillStyle = '#d8d8d2'; ctx.save(); ctx.translate(-2, -13); ctx.rotate(-.5 + Math.sin(T * 22 + ph) * .7); ell(-5, 0, 9, 4); ctx.restore();
+  ctx.strokeStyle = '#f08a24'; ctx.lineWidth = 1.5; seg(-2, -4, -2 + Math.sin(T * 20 + ph) * 3, 0); seg(3, -4, 3 - Math.sin(T * 20 + ph) * 3, 0);
+  ctx.restore();
+}
+function drawGuy(x, y, s, col, lean) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s); if (lean) ctx.rotate(lean);
+  ctx.fillStyle = 'rgba(0,0,0,.2)'; ell(0, 1, 6, 2);
+  ctx.strokeStyle = '#2b2b2b'; ctx.lineWidth = 2.4; seg(-2, 0, -1, -9); seg(3, 0, 1, -9);
+  ctx.fillStyle = col; rr(-4, -20, 8, 12, 2); ctx.fillStyle = '#f0c39a'; ell(0, -24, 3.6, 3.6);
+  if (lean) { ctx.strokeStyle = '#f0c39a'; ctx.lineWidth = 2; seg(3, -17, 11, -15); }
+  else { ctx.strokeStyle = '#c9ccd1'; ctx.lineWidth = 1.4; seg(4, -16, 8, 0); }
+  ctx.restore();
+}
+function drawBoot(x, y, s, p) {
+  ctx.save(); ctx.translate(x, y - 34 * s); ctx.rotate(.9 - p * 1.5); ctx.scale(s, s);
+  ctx.fillStyle = '#2d4a7a'; rr(-6, -26, 13, 34, 3);
+  ctx.fillStyle = '#6b3f1d'; rr(-7, 6, 15, 18, 3); rr(-7, 16, 28, 9, 4);
+  ctx.fillStyle = '#3a220f'; ctx.fillRect(-7, 24, 28, 3);
+  ctx.restore();
+}
+function drawDog(x, y, s, a) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(a); ctx.scale(s, s);
+  ctx.fillStyle = '#e3b56a'; rr(-13, -5, 26, 10, 5);
+  ctx.fillStyle = '#b5432e'; rr(-15, -3, 30, 6, 3);
+  ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(-11, 0);
+  for (let i = 0; i < 6; i++) ctx.lineTo(-11 + (i + 1) * 3.6, i % 2 ? 1.5 : -1.5); ctx.stroke();
+  ctx.restore();
+}
+function label(x, y, text, bg, fg) {
+  ctx.font = `700 ${Math.round(clamp(12 * S, 10, 14))}px "Barlow Condensed","Arial Narrow",sans-serif`;
+  const w = ctx.measureText(text).width + 10, h = clamp(15 * S, 13, 17);
+  x = clamp(x, w / 2 + 2, cw - w / 2 - 2);
+  ctx.fillStyle = bg; rr(x - w / 2, y - h, w, h, 3);
+  ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y - h / 2 + .5);
+}
+
+function draw() {
+  layout();
+  const W = cw, H = ch, dpr = cv._dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#1c5c33'; ctx.fillRect(0, 0, W, H);
+  ctx.save();
+  if (shake > .3) ctx.translate(rnd(-shake, shake), rnd(-shake, shake));
+  if (zoom > 1.01) { ctx.translate(zx, zy); ctx.scale(zoom, zoom); ctx.translate(-zx, -zy); }
+  ctx.fillStyle = '#1c5c33'; ctx.fillRect(-20, -20, W + 40, H + 40);
+  // mown fairway stripes
+  for (let wx = Math.floor((camX - 40) / 120) * 120; sx(wx) < W + 20; wx += 120) {
+    ctx.fillStyle = (Math.round(wx / 120) & 1) ? '#37a058' : '#2f8f4e';
+    ctx.fillRect(sx(wx), TOP, 120 * k + 1, H - TOP + 20);
+  }
+  // tee box
+  ctx.fillStyle = 'rgba(255,255,255,.1)'; ctx.fillRect(sx(-40), TOP, 130 * k, H - TOP);
+  // green, finish line, pin
+  const gx = sx(L);
+  if (gx < W + 40) {
+    ctx.fillStyle = '#8fdc86'; ctx.fillRect(gx, TOP, W - gx + 40, H - TOP + 20);
+    const q = 7;
+    for (let y = TOP, r = 0; y < H; y += q, r++) for (let c = 0; c < 2; c++) { ctx.fillStyle = (r + c) & 1 ? '#15231c' : '#fff'; ctx.fillRect(gx + c * q, y, q, q); }
+    const px = sx(L + 300), py = TOP + (H - TOP) * .5;
+    ctx.fillStyle = '#15231c'; ell(px, py, 5, 2.5);
+    ctx.strokeStyle = '#f7f5ee'; ctx.lineWidth = 2.5; seg(px, py, px, py - 58);
+    ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.moveTo(px, py - 58); ctx.lineTo(px + 26, py - 50 + Math.sin(T * 5) * 2); ctx.lineTo(px, py - 42); ctx.fill();
+  }
+  // lane lines
+  ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 1; ctx.setLineDash([10, 10]); ctx.lineDashOffset = camX * k;
+  for (let i = 1; i < carts.length; i++) seg(0, lanesTop + laneH * i, W, lanesTop + laneH * i);
+  ctx.setLineDash([]);
+  // tree line and yardage signs
+  for (let i = Math.floor((camX - 60) / 64); sx(i * 64) < W + 40; i++) {
+    const h = hash(i), x = sx(i * 64 + h * 30), r = 15 + h * 12;
+    ctx.fillStyle = '#0f4026'; ell(x, TOP - 6 - h * 6, r, r * .8);
+    ctx.fillStyle = '#17553a'; ell(x - 4, TOP - 11 - h * 6, r * .55, r * .45);
+  }
+  ctx.font = '700 12px "Barlow Condensed","Arial Narrow",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (let yd = 550; yd >= 50; yd -= 50) {
+    const x = sx(L - yd * YD); if (x < -30 || x > W + 30) continue;
+    ctx.fillStyle = '#f6f3e7'; rr(x - 15, TOP - 16, 30, 15, 2); ctx.fillStyle = '#15231c'; ctx.fillText(yd, x, TOP - 8);
+  }
+  // decals
+  decals = decals.filter(d => sx(d.x) > -160);
+  for (const d of decals) {
+    let x = sx(d.x); const y = laneY(d.lane);
+    if (d.type === 'porta') {
+      if (T < d.until) x += Math.sin(T * 40) * 1.6 * S;
+      ctx.fillStyle = 'rgba(0,0,0,.2)'; ell(x, y + 1, 14 * S, 3 * S);
+      ctx.fillStyle = '#1f7fa8'; rr(x - 11 * S, y - 40 * S, 22 * S, 40 * S, 2);
+      ctx.fillStyle = '#e8f4f8'; rr(x - 12 * S, y - 43 * S, 24 * S, 5 * S, 2);
+      ctx.fillStyle = '#16607f'; ctx.fillRect(x - 7 * S, y - 32 * S, 14 * S, 30 * S);
+    } else {
+      ctx.fillStyle = d.type === 'bunker' ? '#d9c583' : '#2a78c2'; ell(x, y - 2, 56 * k, laneH * .32);
+      ctx.fillStyle = d.type === 'bunker' ? '#ead9a0' : '#4b9be0'; ell(x - 3 * k, y - 4, 45 * k, laneH * .22);
+    }
+  }
+  // carts
+  const labels = [];
+  for (const c of [...carts].sort((a, b) => a.lane - b.lane)) {
+    const x = sx(c.x), y = laneY(c.lane), ev = c.ev, t = ev && ev.type, et = ev ? ev.t : 0;
+    if (x < -34 * S) { labels.push({edge: 1, c, y}); continue; }
+    if (x > W + 120) continue;
+    let dy = 0, jx = 0, o = {wheel: c.wheel, bob: Math.abs(Math.sin(T * 13 + c.lane)) * Math.min(1.6, Math.abs(c.spd) / 70)};
+    switch (t) {
+      case 'shank': dy = Math.sin(et * 8) * laneH * .24; o.rot = Math.cos(et * 8) * .16; break;
+      case 'footwedge': { const p = et / ev.dur; dy = -Math.sin(Math.PI * p) * 36 * S; o.rot = -Math.PI * 2 * p; o.lift = dy / S;
+        if (p < .35) drawBoot(x - 46 * S, y, S, p / .35); break; }
+      case 'water': dy = 9 * S; o.bob = Math.sin(T * 6) * 1.5; o.rot = Math.sin(T * 3) * .06; break;
+      case 'bunker': dy = 4 * S; o.rot = .17 + Math.sin(et * 10) * .05; break;
+      case 'cartgirl': o.rot = -.2;
+        drawCart(x - 62 * S, y - 3 * S, S, '#ff5fa2', {hair: 1, shirt: '#fff', roof: '#ffd1e3', cooler: 1, wheel: c.wheel, bob: o.bob}); break;
+      case 'fireball': jx = rnd(-1.6, 1.6) * S; o.rot = -.08; break;
+      case 'tailwind': o.rot = -.05; break;
+      case 'hotdog': if (et < .6) { const p = et / .6; drawDog(x - (1 - p) * 70 * S, y - 28 * S - Math.sin(Math.PI * p) * 46 * S, S * 1.3, p * 9); }
+        else jx = rnd(-1, 1) * S; break;
+      case 'slowplay': ['#e23d3d', '#f5c518', '#fff', '#2f6fe0'].forEach((col, i) => drawGuy(x + (48 + i * 14) * S, y - (i % 2) * 5 * S, S, col)); break;
+      case 'marshal': ctx.fillStyle = Math.floor(T * 7) % 2 ? 'rgba(255,170,0,.2)' : 'rgba(216,52,44,.2)'; ctx.fillRect(0, y - laneH * .84, W, laneH);
+        drawCart(x + 60 * S, y, S, '#f7f5ee', {flip: 1, light: 1, shirt: '#d8342c', skin: '#e2b08a'}); break;
+      case 'goose': jx = rnd(-1.2, 1.2) * S;
+        for (let i = 0; i < 3; i++) drawGoose(x + (58 + i * 20 - Math.min(et, 1) * 18) * S, y + (i - 1) * 6 * S + Math.abs(Math.sin(T * 12 + i * 2)) * -5 * S, S * (1 - i * .08), i * 2); break;
+      case 'battery': o.empty = 1; drawGuy(x - 38 * S, y, S, c.color, .45);
+        if (Math.floor(T * 9) % 2) { ctx.fillStyle = '#ffe86b'; ctx.beginPath(); const bx = x + 2 * S, by = y - 74 * S;
+          [[0, 0], [9, 0], [3, 10], [10, 10], [-4, 26], [0, 13], [-7, 13]].forEach(([a, b], i) => i ? ctx.lineTo(bx + a * S, by + b * S) : ctx.moveTo(bx + a * S, by + b * S)); ctx.fill(); }
+        break;
+      case 'porta': o.empty = 1; break;
+      case 'lostball': o.empty = 1; drawGuy(x - (40 + Math.sin(et * 4) * 16) * S, y - 6 * S, S, c.color); break;
+      case 'hangover': o.skin = '#a9c77a'; o.rot = Math.sin(et * 5) * .09; break;
+    }
+    if (storm && c === storm.lucky) o.rot = -.06;
+    drawCart(x + jx, y + dy, S, c.color, o);
+    if (t === 'water') {
+      ctx.fillStyle = 'rgba(42,120,194,.82)'; ell(x, y + 3 * S, 40 * S, 9 * S);
+      ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1.5;
+      for (let i = 0; i < 2; i++) { const p = (et * .9 + i * .5) % 1; ctx.globalAlpha = 1 - p; ctx.beginPath(); ctx.ellipse(x, y + 2 * S, (20 + p * 40) * S, (4 + p * 8) * S, 0, 0, 7); ctx.stroke(); }
+      ctx.globalAlpha = 1;
+    }
+    labels.push({c, x, y: y + Math.min(dy, 0), ev});
+  }
+  // particles
+  for (const p of parts) {
+    const x = sx(p.x); ctx.globalAlpha = clamp(p.life * 2.5, 0, 1); ctx.fillStyle = p.color;
+    if (p.heart || p.txt) {
+      ctx.font = `700 ${Math.round(p.size)}px "Barlow Condensed","Arial Narrow",sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      if (p.txt) { ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(21,35,28,.85)'; ctx.lineJoin = 'round'; ctx.strokeText(p.txt, x, p.y); }
+      ctx.fillText(p.heart ? '♥' : p.txt, x, p.y);
+    }
+    else if (p.streak) ctx.fillRect(x, p.y, 24, 1.6);
+    else ell(x, p.y, p.size, p.size);
+  }
+  ctx.globalAlpha = 1;
+  // lightning delay
+  if (storm) {
+    const st = storm.t;
+    ctx.fillStyle = 'rgba(8,16,34,.5)'; ctx.fillRect(-20, -20, W + 40, H + 40);
+    ctx.strokeStyle = 'rgba(200,220,255,.5)'; ctx.lineWidth = 1.2;
+    for (let i = 0; i < 70; i++) { const rx = rnd(0, W + 40), ry = rnd(0, H); seg(rx, ry, rx - 8, ry + 20); }
+    if (st < .14 || (st > 1.2 && st < 1.32) || (st > 2.3 && st < 2.38)) { ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.fillRect(-20, -20, W + 40, H + 40); }
+  }
+  // names and event labels
+  for (const l of labels) {
+    const c = l.c;
+    if (l.edge) {
+      if (zoom > 1.05) continue;
+      ctx.font = `700 ${Math.round(clamp(12 * S, 10, 13))}px "Barlow Condensed","Arial Narrow",sans-serif`;
+      const txt = '◀ ' + c.name.toUpperCase(), w = ctx.measureText(txt).width + 14;
+      ctx.fillStyle = 'rgba(21,35,28,.82)'; rr(3, l.y - 22 * S, w, 16, 3);
+      ctx.fillStyle = c.color; ctx.fillRect(3, l.y - 22 * S, 4, 16);
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(txt, 11, l.y - 22 * S + 8.5);
+      continue;
+    }
+    const top = l.y - 47 * S;
+    if (storm && !c.place) label(l.x, top, c === storm.lucky ? "DIDN'T HEAR THE HORN" : c.name.toUpperCase(), c === storm.lucky ? '#ffd23f' : 'rgba(21,35,28,.78)', c === storm.lucky ? '#15231c' : '#fff');
+    else if (l.ev) { const d = EV[l.ev.type]; label(l.x, top, c.name.toUpperCase() + ' · ' + d.label, d.good ? '#ff5fa2' : '#d8342c', '#fff'); }
+    else label(l.x, top, c.name.toUpperCase(), 'rgba(21,35,28,.78)', '#fff');
+  }
+  ctx.restore();
+  if (flash > .02) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, flash)})`; ctx.fillRect(0, 0, W, H); }
+  // hole map
+  ctx.fillStyle = 'rgba(13,51,38,.85)'; rr(8, 5, W - 16, 15, 7.5);
+  ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2; seg(20, 12.5, W - 26, 12.5);
+  ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.moveTo(W - 24, 8); ctx.lineTo(W - 15, 12.5); ctx.lineTo(W - 24, 17); ctx.fill();
+  for (const c of [...carts].sort((a, b) => a.x - b.x)) {
+    const x = 20 + clamp(c.x / L, 0, 1) * (W - 46);
+    ctx.fillStyle = '#15231c'; ell(x, 12.5, 5.5, 5.5); ctx.fillStyle = c.color; ell(x, 12.5, 4, 4);
+  }
+}
+
+/* ---------- par 3 shootout: one swing each, closest two to the pin are captains ---------- */
+const P3 = {
+  ace:{label:'HOLE IN ONE!!!',good:1,lines:["{n} JUST MADE A HOLE IN ONE. Unbelievable. Drinks are on {n} for the rest of the trip."]},
+  dart:{label:'DART',good:1,lines:["{n} stuck it to {d}. Somebody check that swing for performance enhancers.","A dart from {n}. {d}. Even a blind squirrel finds a nut."]},
+  green:{label:'ON THE GREEN',good:1,lines:["{n} is on the dance floor, {d} away. A solid three-putt opportunity.","{d} for {n}. On the green. Nobody panic."]},
+  flag:{label:'OFF THE STICK',lines:["{n} hit the flagstick! And it kicked away to {d}. Golf is a cruel game."]},
+  bunker:{label:'BUNKER',lines:["{n} is in the sand. Fried egg. {d} from the pin and miles from happy.","Beach day for {n}. Bring a rake and a therapist."]},
+  water:{label:'WATER',lines:["{n} is wet. That ball cost five dollars and lasted four seconds.","Rinsed it. {n} will be reloading and re-thinking."]},
+  miss:{label:'MISSED THE GREEN',lines:["{n} missed the green by {d}. It is a very big green.","Wrong club, wrong swing, possibly wrong sport. {n} is {d} away."]},
+  shank:{label:'SHANK',lines:["{n} farmed it hard. That ball is in another zip code.","Hosel rocket from {n}. Everybody on the next tee, heads up."]},
+  chunk:{label:'CHUNKED IT',lines:["{n} laid the sod over it. The divot went further than the ball.","{n} topped it. That one is still rolling. Not far. But rolling."]}
+};
+const p3Dist = (d, type) => type === 'ace' ? 'In the hole' : (d < 100 ? `${Math.floor(d)} ft ${Math.floor((d % 1) * 12)} in` : `${Math.round(d)} ft`) + (type === 'water' ? ' (wet)' : '');
+function p3Geo() {
+  const W = cw, H = ch, fh = H - TOP, pin = {x: W * .76, y: TOP + fh * .48}, tee = {x: W * .09, y: TOP + fh * .62};
+  return {W, H, fh, pin, tee, f: (pin.x - tee.x) / 450, gs: clamp(W / 700, .75, 1.3)};
+}
+function p3Init() {
+  p3 = {order: [...carts].sort(() => Math.random() - .5), i: 0, phase: 'wait', t: 0, shot: null, q: 0, trail: [], per: clamp(56 / carts.length, 8, 19)};
+  p3parts = [];
+  carts.forEach(c => { c.dist = null; c.bf = null; c.stype = null; c.shotDone = false; });
+}
+function p3Roll(teeF) {
+  const r = Math.random() * 100, pol = d => { const a = rnd(0, 6.283); return {fx: d * Math.cos(a), fy: d * Math.sin(a)}; };
+  let type, pos;
+  if (r < 1.5) { type = 'ace'; pos = {fx: 0, fy: 0}; }
+  else if (r < 14) { type = 'dart'; pos = pol(rnd(1, 9.9)); }
+  else if (r < 44) { type = 'green'; pos = pol(rnd(10, 40)); }
+  else if (r < 48) { type = 'flag'; pos = pol(rnd(14, 34)); }
+  else if (r < 61) { type = 'bunker'; const b = pick([[18, -64, 32, 15], [74, 22, 18, 28]]); pos = {fx: b[0] + rnd(-.6, .6) * b[2], fy: b[1] + rnd(-.6, .6) * b[3]}; }
+  else if (r < 74) { type = 'water'; pos = {fx: -100 + rnd(-.7, .7) * 58, fy: 62 + rnd(-.6, .6) * 30}; }
+  else if (r < 86) { type = 'miss'; pos = Math.random() < .5 ? {fx: rnd(100, 135), fy: rnd(-45, 50)} : {fx: rnd(-112, -64), fy: rnd(-55, 5)}; }
+  else if (r < 94) { type = 'shank'; pos = {fx: rnd(-330, -250), fy: teeF.fy + pick([-1, 1]) * rnd(150, 220)}; }
+  else { type = 'chunk'; pos = {fx: rnd(-410, -360), fy: teeF.fy + rnd(-8, 8)}; }
+  let land = pos;
+  if (type === 'ace') land = {fx: -16, fy: rnd(-4, 4)};
+  if (type === 'flag') land = {fx: 0, fy: 0};
+  if (type === 'dart' || type === 'green') { const run = rnd(10, 22), m = Math.hypot(pos.fx + 450, pos.fy - teeF.fy); land = {fx: pos.fx - (pos.fx + 450) / m * run, fy: pos.fy - (pos.fy - teeF.fy) / m * run}; }
+  return {type, pos, land, tee: teeF, dist: Math.hypot(pos.fx, pos.fy),
+    fd: type === 'shank' ? 1.3 : type === 'chunk' ? 1 : 2.3, rd: type === 'ace' ? 1.1 : type === 'dart' || type === 'green' ? .9 : type === 'flag' ? .7 : .4};
+}
+function p3Banner(title, sub, good, dur) {
+  spot = {c: null, t: 0, dur: dur || 1.7, zoom: false, title, sub, good, lo: true};
+  $('cutT').textContent = title; $('cutN').textContent = sub;
+  const el = $('cut'); el.className = 'cut ' + (good ? 'good ' : '') + 'lo'; el.hidden = false; void el.offsetWidth; el.classList.add('in');
+}
+function p3Pop(x, y, txt, color, size, g) {
+  p3parts.push({x, y, vx: 0, vy: -26 * g.gs, life: 1.5, txt, size: Math.max(11, (size || 15) * g.gs), color: color || '#fff'});
+}
+function p3Burst(x, y, n, colors, g, up) {
+  for (let i = 0; i < n; i++) p3parts.push({x, y, vx: rnd(-90, 90) * g.gs, vy: rnd(-(up || 200), -40) * g.gs, g: 380 * g.gs, life: rnd(.7, 1.3), size: rnd(1.5, 3.5) * g.gs, color: pick(colors)});
+}
+function p3Enter(ph) {
+  const s = p3, c = s.order[s.i], g = p3Geo(), sh = s.shot;
+  s.phase = ph; s.t = 0;
+  if (ph === 'tee') {
+    s.shot = p3Roll({fx: -450, fy: (g.tee.y - g.pin.y) / g.f}); s.trail = [];
+    const sc = s.per / 8; s.shot.fd *= clamp(sc, 1, 1.6); s.shot.rd *= clamp(sc, 1, 1.8);
+    s.teeT = s.per * .3; s.holdT = Math.max(2.4, s.per - s.teeT - s.shot.fd - s.shot.rd);
+    p3Banner('ON THE TEE', c.name, true, clamp(s.teeT * .5, 1.4, 2.6));
+    say(`${c.name} steps up. ${c.scout}`, true); renderBoard();
+  } else if (ph === 'flight') {
+    if (sh.type === 'shank') { p3Pop(g.tee.x + 60 * g.gs, g.tee.y - 40 * g.gs, 'FARMED IT HARD. FORE!', '#ffd23f', 18, g); shake = 6; }
+    else if (sh.type === 'chunk') { p3Pop(g.tee.x + 60 * g.gs, g.tee.y - 40 * g.gs, 'LAID THE SOD OVER IT', '#ffd23f', 16, g); p3Burst(g.tee.x + 8, g.tee.y, 14, ['#6b4a2b', '#3f7a3a'], g, 150); }
+    else p3Pop(g.tee.x + 20 * g.gs, g.tee.y - 40 * g.gs, 'THWACK', '#fff', 14, g);
+  } else if (ph === 'roll') {
+    const x = g.pin.x + sh.land.fx * g.f, y = clamp(g.pin.y + sh.land.fy * g.f, TOP - 6, g.H - 6), d = P3[sh.type], dtxt = p3Dist(sh.dist, sh.type);
+    if (sh.type === 'water') { p3Burst(x, y, 40, ['#bfe6ff', '#7fc4f5', '#fff'], g, 240); p3Pop(x, y - 20, 'SPLOOSH', '#dff3ff', 14, g); shake = 5; }
+    if (sh.type === 'bunker') { p3Burst(x, y, 30, ['#ead9a0', '#d9c583'], g); p3Pop(x, y - 16, 'FRIED EGG', '#fff3c4', 12, g); shake = 4; }
+    if (sh.type === 'flag') { p3Pop(x, y - 30, 'CLANK', '#ffd23f', 13, g); shake = 5; }
+    if (sh.type === 'dart') p3Pop(x, y - 22, 'DART!', '#ffd23f', 13, g);
+    if (sh.type === 'miss') p3Burst(x, y, 10, ['#3f7a3a', '#8fdc86'], g, 120);
+    if (sh.type === 'shank') p3Burst(x, y, 16, ['#0f4026', '#17553a', '#8fdc86'], g, 160);
+    if (sh.type !== 'ace') { p3Banner(d.label, c.name + ' · ' + dtxt, d.good, clamp(s.per * .15, 1.7, 2.8)); say(line(d.lines, c).replaceAll('{d}', dtxt), true); }
+    if (['dart', 'flag'].includes(sh.type) || (sh.type === 'green' && Math.random() < .5)) showPin(c, pick(['Nice shot, {n}', 'Buy you a drink, {n}?', 'On in one, {n}']));
+    if (['water', 'shank', 'chunk'].includes(sh.type)) showPin(c, pick(['You need a drink, {n}', 'Rough one, {n}. Transfusion?', 'Still love you, {n}']));
+  } else if (ph === 'hold') {
+    c.dist = sh.dist; c.bf = sh.pos; c.stype = sh.type; c.shotDone = true;
+    if (sh.type === 'ace') {
+      p3Burst(g.pin.x, g.pin.y, 90, ['#ffd23f', '#ff5fa2', '#fff', '#2f6fe0', '#e23d3d'], g, 320); shake = 14;
+      p3Banner(P3.ace.label, c.name, true, 2.4); say(line(P3.ace.lines, c), true); showPin(c, 'Drinks are on {n}');
+    }
+    renderBoard();
+  }
+}
+function p3End() {
+  const s = p3, g = p3Geo(); s.phase = 'end';
+  [...carts].sort((a, b) => a.dist - b.dist).forEach((c, i) => { c.place = i + 1; });
+  finished = carts.length;
+  p3Burst(g.pin.x, g.pin.y - 10, 70, ['#ffd23f', '#ff5fa2', '#fff', '#2f6fe0', '#e23d3d'], g, 300);
+  endRace();
+}
+function p3Step(dt) {
+  for (const p of p3parts) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += (p.g || 0) * dt; }
+  p3parts = p3parts.filter(p => p.life > 0);
+  const s = p3; if (!s) return;
+  const sh = s.shot, wide = sh && (sh.type === 'shank' || sh.type === 'chunk');
+  const zoomed = s.phase === 'end' || (sh && !wide && ((s.phase === 'flight' && s.t / sh.fd > .45) || s.phase === 'roll' || s.phase === 'hold'));
+  s.q += ((zoomed ? 1 : 0) - s.q) * Math.min(1, dt * 3.5);
+  if (state !== 'race') return;
+  s.t += dt;
+  if (s.phase === 'wait') p3Enter('tee');
+  else if (s.phase === 'intro') { if (s.t > 3.4) p3Enter('tee'); }
+  else if (s.phase === 'tee' && s.t > s.teeT) p3Enter('flight');
+  else if (s.phase === 'flight' && s.t >= sh.fd) p3Enter('roll');
+  else if (s.phase === 'roll' && s.t >= sh.rd) p3Enter('hold');
+  else if (s.phase === 'hold' && s.t > s.holdT) { if (++s.i >= s.order.length) p3End(); else p3Enter('tee'); }
+}
+function p3Draw() {
+  const g = p3Geo(), {W, H, fh, pin, tee, f, gs} = g, dpr = cv._dpr, s = p3;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#1c5c33'; ctx.fillRect(0, 0, W, H);
+  const q = s ? s.q : 0, Z = 1 + 1.3 * q, zc = {x: W / 2 + (pin.x - W / 2) * q, y: H / 2 + (pin.y - H / 2) * q};
+  const X = p => pin.x + p.fx * f, Y = p => clamp(pin.y + p.fy * f, TOP - 6, H - 6), px = n => n / Math.sqrt(Z);
+  ctx.save();
+  if (shake > .3) ctx.translate(rnd(-shake, shake), rnd(-shake, shake));
+  ctx.translate(W / 2, H / 2); ctx.scale(Z, Z); ctx.translate(-zc.x, -zc.y);
+  ctx.fillStyle = '#2a7d45'; ctx.fillRect(-40, TOP, W + 80, H - TOP + 40);
+  ctx.fillStyle = '#37a058'; ell((tee.x + pin.x) / 2, (tee.y + pin.y) / 2, (pin.x - tee.x) * .58, fh * .31);
+  ctx.fillStyle = '#58bf72'; rr(tee.x - 22 * gs, tee.y - 12 * gs, 46 * gs, 22 * gs, 4);
+  ctx.fillStyle = '#5fbf6a'; ell(pin.x + 4 * f, pin.y + 2 * f, 54 * f, 51 * f);
+  ctx.fillStyle = '#8fdc86'; ell(pin.x + 4 * f, pin.y + 2 * f, 46 * f, 44 * f);
+  ctx.fillStyle = '#2a78c2'; ell(pin.x - 100 * f, pin.y + 62 * f, 62 * f, 34 * f);
+  ctx.fillStyle = '#4b9be0'; ell(pin.x - 102 * f, pin.y + 60 * f, 52 * f, 26 * f);
+  for (const b of [[18, -64, 34, 17], [74, 22, 20, 30]]) {
+    ctx.fillStyle = '#d9c583'; ell(pin.x + b[0] * f, pin.y + b[1] * f, b[2] * f, b[3] * f);
+    ctx.fillStyle = '#ead9a0'; ell(pin.x + (b[0] - 2) * f, pin.y + (b[1] - 2) * f, b[2] * f * .8, b[3] * f * .75);
+  }
+  for (let i = -1; i * 64 < W + 40; i++) {
+    const h = hash(i + 7), x = i * 64 + h * 30, r = 15 + h * 12;
+    ctx.fillStyle = '#0f4026'; ell(x, TOP - 6 - h * 6, r, r * .8);
+    ctx.fillStyle = '#17553a'; ell(x - 4, TOP - 11 - h * 6, r * .55, r * .45);
+  }
+  ctx.font = '700 12px "Barlow Condensed","Arial Narrow",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#f6f3e7'; rr(tee.x - 15, tee.y - 34 * gs - 8, 30, 15, 2); ctx.fillStyle = '#15231c'; ctx.fillText('150', tee.x, tee.y - 34 * gs);
+  // hole and flag
+  ctx.fillStyle = '#15231c'; ell(pin.x, pin.y, px(4), px(2.2));
+  ctx.strokeStyle = '#f7f5ee'; ctx.lineWidth = px(2.2); seg(pin.x, pin.y, pin.x, pin.y - px(44));
+  ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.moveTo(pin.x, pin.y - px(44)); ctx.lineTo(pin.x + px(20), pin.y - px(38) + Math.sin(T * 5) * 1.5); ctx.lineTo(pin.x, pin.y - px(32)); ctx.fill();
+  const ball = (x, y, col) => { ctx.fillStyle = '#15231c'; ell(x, y, px(4.6), px(4.6)); ctx.fillStyle = col; ell(x, y, px(3.2), px(3.2)); };
+  const tag = (x, y, text) => {
+    ctx.font = `700 ${px(12)}px "Barlow Condensed","Arial Narrow",sans-serif`;
+    const w = ctx.measureText(text).width + px(10), h = px(15);
+    ctx.fillStyle = 'rgba(21,35,28,.85)'; rr(x - w / 2, y - h, w, h, px(3));
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y - h / 2 + .5);
+  };
+  // balls already hit
+  const cur = s ? s.order[Math.min(s.i, s.order.length - 1)] : null, done = state === 'done';
+  for (const c of carts) {
+    if (!c.shotDone) continue;
+    const x = X(c.bf), y = Y(c.bf);
+    if (c.stype === 'water') { ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = px(1.4); const p = (T * .7 + c.lane * .3) % 1; ctx.globalAlpha = 1 - p; ctx.beginPath(); ctx.ellipse(x, y, px(4 + p * 12), px(2 + p * 6), 0, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
+    else if (c.stype !== 'ace') ball(x, y, c.color);
+  }
+  if (s && s.phase === 'hold' && cur && cur.shotDone && cur.stype !== 'ace') {
+    ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = px(1.6); ctx.setLineDash([px(5), px(4)]);
+    seg(X(cur.bf), Y(cur.bf), pin.x, pin.y); ctx.setLineDash([]);
+  }
+  for (const c of carts) if (c.shotDone && (done ? c.place <= 2 : c === cur)) tag(X(c.bf), Y(c.bf) - px(8), c.name.toUpperCase() + ' · ' + p3Dist(c.dist, c.stype));
+  // players waiting, and the one on the tee
+  const waiting = (s ? s.order : carts).filter(c => !c.shotDone && !(s && state === 'race' && c === cur));
+  waiting.forEach((c, i) => drawGuy(tee.x - 12 * gs + (i % 4) * 13 * gs, tee.y + (30 + Math.floor(i / 4) * 22) * gs, gs * .95, c.color));
+  if (s && cur && state === 'race' && s.phase !== 'end') {
+    const swing = s.phase === 'flight' && s.t < .35;
+    if (s.phase === 'tee' || s.phase === 'flight') { drawGuy(tee.x - 6 * gs, tee.y + 4 * gs, gs * 1.25, cur.color, swing ? -.35 : 0); tag(tee.x + 4 * gs, tee.y - 38 * gs - 12, cur.name.toUpperCase()); }
+    if (s.phase === 'tee') ball(tee.x + 6 * gs, tee.y + 2 * gs, '#fff');
+    const sh = s.shot;
+    if (s.phase === 'flight') {
+      const p = Math.min(1, s.t / sh.fd), gx = X(sh.tee) + (X(sh.land) - X(sh.tee)) * p, gy = Y(sh.tee) + (Y(sh.land) - Y(sh.tee)) * p;
+      const hgt = sh.type === 'chunk' ? Math.abs(Math.sin(p * Math.PI * 3)) * fh * .035 * (1 - p) : Math.sin(p * Math.PI) * fh * (sh.type === 'shank' ? .1 : .3);
+      s.trail.push([gx, gy - hgt]); if (s.trail.length > 16) s.trail.shift();
+      s.trail.forEach((t, i) => { ctx.fillStyle = `rgba(255,255,255,${i / 40})`; ell(t[0], t[1], px(2.4), px(2.4)); });
+      ctx.fillStyle = 'rgba(0,0,0,.25)'; ell(gx, gy, px(4), px(2));
+      ball(gx, gy - hgt, '#fff');
+    } else if (s.phase === 'roll' && sh.type !== 'water') {
+      const p = Math.min(1, s.t / sh.rd), e = 1 - (1 - p) * (1 - p), x = X(sh.land) + (X(sh.pos) - X(sh.land)) * e, y = Y(sh.land) + (Y(sh.pos) - Y(sh.land)) * e;
+      const hop = sh.type === 'flag' ? Math.sin(p * Math.PI) * px(14) : 0;
+      if (!(sh.type === 'ace' && p > .92)) ball(x, y - hop, cur.color);
+    }
+  }
+  for (const p of p3parts) {
+    ctx.globalAlpha = clamp(p.life * 2.5, 0, 1); ctx.fillStyle = p.color;
+    if (p.txt) {
+      ctx.font = `700 ${Math.round(p.size)}px "Barlow Condensed","Arial Narrow",sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(21,35,28,.85)'; ctx.lineJoin = 'round'; ctx.strokeText(p.txt, clamp(p.x, 70, W - 70), p.y); ctx.fillText(p.txt, clamp(p.x, 70, W - 70), p.y);
+    } else ell(p.x, p.y, p.size, p.size);
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+  if (flash > .02) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, flash)})`; ctx.fillRect(0, 0, W, H); }
+  // standings, drawn on the picture
+  const ranked = carts.filter(c => c.shotDone).sort((a, b) => a.dist - b.dist);
+  if (ranked.length) {
+    const rh = 19, pw = Math.min(230, W * .56), ph = 24 + ranked.length * rh + 6;
+    ctx.fillStyle = 'rgba(21,35,28,.88)'; rr(8, 8, pw, ph, 6);
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    ctx.font = '700 11px "Barlow Condensed","Arial Narrow",sans-serif'; ctx.fillStyle = '#ffd23f'; ctx.fillText('CLOSEST TO THE PIN', 18, 21);
+    ranked.forEach((c, i) => {
+      const y = 32 + i * rh + rh / 2;
+      ctx.fillStyle = c.color; ctx.fillRect(18, y - 6, 5, 12);
+      ctx.font = '700 14px "Barlow Condensed","Arial Narrow",sans-serif'; ctx.fillStyle = i < 2 ? '#fff' : '#b9c4bd';
+      ctx.textAlign = 'left'; ctx.fillText(`${i + 1}  ${c.name.toUpperCase()}`, 29, y);
+      ctx.textAlign = 'right'; ctx.fillText(p3Dist(c.dist, c.stype), pw - 4, y);
+    });
+  }
+}
+function p3Board() {
+  const s = p3, done = state === 'done', all = s ? s.order : carts;
+  const shot = all.filter(c => c.shotDone).sort((a, b) => a.dist - b.dist), wait = all.filter(c => !c.shotDone);
+  const cur = s && state === 'race' ? s.order[s.i] : null;
+  $('rows').innerHTML = (done ? shot.slice(0, 2) : [...shot, ...wait]).map((c, i) => {
+    const stat = c.shotDone ? p3Dist(c.dist, c.stype) : c === cur ? 'On the tee' : 'Waiting';
+    return `<li class="row${done ? ' cap' : ''}"><span class="pos">${c.shotDone ? i + 1 : '–'}</span><span class="chip" style="background:${c.color}"></span>` +
+      `<div class="who"><b>${esc(c.name)}</b><small>${esc(done ? 'Captain' : c.scout)}</small></div><span class="stat${c === cur && !c.shotDone ? ' good' : ''}">${stat}</span></li>`;
+  }).join('');
+}
+const MODES = {
+  race: {eyebrow: 'Hole 19 · Par 5 · 600 yards', sub: 'First two carts to the green are your captains. Everyone else gets drafted.',
+    hint: 'Two to eight names. The race runs about two minutes and is pure luck, same odds for everybody. The carts above are an example field until you add names.'},
+  par3: {eyebrow: 'Hole 7 · Par 3 · 150 yards', sub: 'One swing each. The two closest to the pin are your captains.',
+    hint: 'Two to eight names. Everybody gets one swing at a 150-yard par 3, in random order, and the two closest to the pin are your captains. Pure luck, same odds for everybody.'}
+};
+function setMode(m) {
+  if (m === mode) return;
+  mode = m; playoff = null; autoPO = false; recStop(true); updateSave();
+  state = 'setup'; spot = null; shake = 0;
+  $('caps').hidden = true; $('boardPanel').hidden = true; $('setup').hidden = false; $('cut').hidden = true; $('pin').hidden = true; $('count').hidden = true;
+  $('tabRace').setAttribute('aria-selected', m === 'race'); $('tabPar3').setAttribute('aria-selected', m === 'par3');
+  setShow(show); $('sub').textContent = MODES[m].sub; $('hint1').textContent = MODES[m].hint;
+  preview(); say('Quiet on the tee, please. Enter the field, then send them.', true);
+}
+const SITE = /github\.io$/.test(location.hostname);
+let unlocked = !SITE;
+try { if (location.hash === '#director') localStorage.setItem('cpc-director', '1'); unlocked = unlocked || !!localStorage.getItem('cpc-director'); } catch (e) { unlocked = unlocked || location.hash === '#director'; }
+function setShow(v) {
+  show = v && unlocked; $('rig').checked = show; $('rigRow').hidden = mode !== 'race' || !unlocked;
+  $('eyebrow').textContent = MODES[mode].eyebrow + (show && mode === 'race' ? ' •' : '');
+  try { localStorage.setItem('cpc-rig', v ? '1' : ''); } catch (e) {}
+}
+$('rig').addEventListener('change', e => setShow(e.target.checked));
+try { setShow(!!localStorage.getItem('cpc-rig')); } catch (e) { setShow(false); }
+$('eyebrow').addEventListener('click', e => { if (e.detail === 3) setShow(!show); });
+document.addEventListener('keydown', e => { if (e.key === 'T' && e.shiftKey && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) setShow(!show); });
+$('playoff').addEventListener('click', () => {
+  const list = tieResult.map(c => ({name: c.name, color: c.color}));
+  setMode('par3'); playoff = list; startRace();
+});
+$('tabRace').addEventListener('click', () => setMode('race'));
+$('tabPar3').addEventListener('click', () => setMode('par3'));
+
+/* ---------- leaderboard ---------- */
+function renderBoard() {
+  if (mode === 'par3') return p3Board();
+  const order = [...carts].sort((a, b) => a.rank - b.rank), n = order.length;
+  const pre = state === 'countdown', done = state === 'done';
+  if (pre) order.sort((a, b) => a.lane - b.lane);
+  $('rows').innerHTML = (done ? order.filter(c => c.place <= (tieResult ? 1 : 2)) : order).map((c, i) => {
+    let stat = '', cls = '', cap = false;
+    if (done) {
+      cap = c.place <= 2;
+      stat = tieResult ? 'Tied for first' : 'Captain';
+    } else if (!pre) {
+      if (c.place) stat = 'On the green';
+      else if (storm) { stat = c === storm.lucky ? 'Playing through' : 'Lightning delay'; cls = c === storm.lucky ? ' good' : ' bad'; }
+      else if (c.ev) { stat = EV[c.ev.type].label; cls = EV[c.ev.type].good ? ' good' : ' bad'; }
+      else stat = Math.max(1, Math.round((L - c.x) / YD)) + ' yds out';
+    }
+    return `<li class="row${cap ? ' cap' : ''}"><span class="pos">${pre ? '–' : done && tieResult ? 'T1' : i + 1}</span><span class="chip" style="background:${c.color}"></span>` +
+      `<div class="who"><b>${esc(c.name)}</b><small>${esc(c.scout)}</small></div><span class="stat${cls}">${stat}</span></li>`;
+  }).join('');
+}
+
+/* ---------- background music: plays on the page, and is encoded into the saved video ---------- */
+const TRACKS = {
+  banjo: {src: 'music/banjo.mp3', aacUrl: 'music/banjo-aac.json', gain: .5},   // cart race
+  epic: {src: 'music/epic.mp3', aacUrl: 'music/epic-aac.json', gain: .4}       // par 3 shootout
+};
+for (const k in TRACKS) { const el = TRACKS[k].el = new Audio(); el.loop = true; el.preload = 'auto'; el.src = TRACKS[k].src; }
+let music = TRACKS.banjo.el, curTrack = 'banjo', musicFade = 0, musicIv = 0;
+const aac = {};
+try { if (localStorage.getItem('cpc-music') === 'off') $('musicOn').checked = false; } catch (e) {}
+$('musicOn').addEventListener('change', e => { try { localStorage.setItem('cpc-music', e.target.checked ? 'on' : 'off'); } catch (err) {} });
+function musicPlay(name) {
+  clearTimeout(musicFade); clearInterval(musicIv);
+  for (const k in TRACKS) TRACKS[k].el.pause();
+  const t = TRACKS[name], wc = rec.wc; music = t.el; curTrack = name;
+  if (wc) wc.marks.push({t: wc.n ? (performance.now() - wc.t0) / 1000 : 0, name});   // remembered so the saved video switches tracks at the same moment
+  if (!$('musicOn').checked) return;
+  try { music.currentTime = 0; } catch (e) {}
+  music.volume = t.gain; const pr = music.play(); if (pr && pr.catch) pr.catch(() => {});
+}
+function musicStop(delay) {
+  clearTimeout(musicFade); clearInterval(musicIv);
+  if (!delay) { music.pause(); return; }
+  const el = music;
+  musicFade = setTimeout(() => { musicIv = setInterval(() => { if (el.volume > .04) el.volume -= .04; else { el.pause(); clearInterval(musicIv); } }, 100); }, Math.max(0, delay - 1300));
+}
+// The saved video's soundtrack is a ready-made AAC copy of the track (already at half volume).
+// Its frames are copied straight into the MP4, so no audio encoder is needed in the browser.
+for (const name in TRACKS) (async () => {
+  try {
+    const u = Uint8Array.from(atob((await (await fetch(TRACKS[name].aacUrl)).json()).adts), c => c.charCodeAt(0)), frames = [];
+    let i = 0, sr = 0, ch = 0, asc = null;
+    while (i + 7 < u.length) {
+      if (u[i] !== 0xFF || (u[i + 1] & 0xF0) !== 0xF0) { i++; continue; }
+      const len = ((u[i + 3] & 3) << 11) | (u[i + 4] << 3) | (u[i + 5] >> 5), head = (u[i + 1] & 1) ? 7 : 9;
+      if (len < 8 || i + len > u.length) break;
+      if (!asc) {
+        const prof = (u[i + 2] >> 6) + 1, sfi = (u[i + 2] >> 2) & 15; ch = ((u[i + 2] & 1) << 2) | (u[i + 3] >> 6);
+        sr = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000][sfi];
+        asc = new Uint8Array([(prof << 3) | (sfi >> 1), ((sfi & 1) << 7) | (ch << 3)]);
+      }
+      frames.push(u.subarray(i + head, i + len)); i += len;
+    }
+    if (frames.length > 10 && sr && ch) aac[name] = {frames, sr, ch, asc};
+  } catch (e) {}
+})();
+function muxMusic(wc, dur) {
+  const A = aac.banjo, fd = 1024 / A.sr * 1e6, meta = {decoderConfig: {codec: 'mp4a.40.2', numberOfChannels: A.ch, sampleRate: A.sr, description: A.asc}};
+  let seg = 0, j = 0;
+  for (let i = 0; i * fd < dur * 1e6; i++) {
+    while (seg + 1 < wc.marks.length && wc.marks[seg + 1].t * 1e6 <= i * fd) { seg++; j = 0; }
+    const tr = aac[wc.marks[seg].name];
+    wc.muxer.addAudioChunkRaw(tr.frames[j++ % tr.frames.length], 'key', Math.round(i * fd), Math.round(fd), i ? undefined : meta);
+  }
+}
+
+/* ---------- video export: a broadcast frame is composited every tick and recorded ---------- */
+const rec = {cv: document.createElement('canvas'), mr: null, wc: null, pending: null, blob: null, ext: 'mp4', on: false, tail: 0, info: '', why: ''};
+const rx = rec.cv.getContext('2d');
+// preferred path: encode frames ourselves and write a standard MP4 (has a length, can be scrubbed).
+// Browsers differ in which H.264 encoder settings they accept, so several are tried in turn.
+const WC_TRY = [
+  {name: 'software', codec: 'avc1.42001f', hardwareAcceleration: 'prefer-software'},
+  {name: 'default', codec: 'avc1.42001f'},
+  {name: 'default-4.0', codec: 'avc1.420028'},
+  {name: 'main-4.0', codec: 'avc1.4d0028'},
+  {name: 'hardware', codec: 'avc1.42001f', hardwareAcceleration: 'prefer-hardware'}
+];
+let wcCfgs = [], wcWhy = 'still checking the encoder';
+(async () => {
+  if (location.hash === '#backup') { wcWhy = 'backup forced'; return; }
+  if (!window.VideoEncoder || !window.VideoFrame) { wcWhy = 'this browser has no video encoder for pages'; return; }
+  if (!window.Mp4Muxer) { wcWhy = 'the MP4 writer did not load'; return; }
+  for (const c of WC_TRY) {
+    try {
+      const cfg = {codec: c.codec, width: 1280, height: 720, bitrate: 2.5e6, framerate: 30};
+      if (c.hardwareAcceleration) cfg.hardwareAcceleration = c.hardwareAcceleration;
+      if ((await VideoEncoder.isConfigSupported(cfg)).supported) wcCfgs.push(c);
+    } catch (e) {}
+  }
+  wcWhy = wcCfgs.length ? '' : 'this browser cannot encode H.264 from a page';
+})();
+const REC_OK = !!(window.VideoEncoder || (window.MediaRecorder && rec.cv.captureStream));
+function updateSave() {
+  const b = $('save'); b.hidden = !(REC_OK && (rec.on || rec.pending || rec.blob));
+  b.disabled = !rec.blob; b.textContent = rec.blob ? 'Save video' : 'Finishing video…';
+  $('saveNote').hidden = !(rec.blob && rec.info); if (rec.blob && rec.info) $('saveNote').textContent = 'Video ready: ' + rec.info;
+}
+function recStop(discard) {
+  const mr = rec.mr, wc = rec.wc;
+  rec.wc = null; rec.on = false; rec.tail = 0;
+  if (mr && mr.state !== 'inactive') { mr._discard = discard; try { mr.stop(); } catch (e) {} }
+  if (wc) {
+    if (discard) { try { wc.enc.close(); } catch (e) {} }
+    else {
+      rec.pending = wc;
+      wc.enc.flush().then(async () => {
+        if (!wc.out || wc.err) throw 0;
+        if (wc.audio) muxMusic(wc, wc.lastTs / 1e6 + .04);
+        wc.muxer.finalize(); try { wc.enc.close(); } catch (e) {}
+        if (rec.pending === wc) { rec.blob = new Blob([wc.muxer.target.buffer], {type: 'video/mp4'}); rec.pending = null;
+          rec.info = 'standard MP4 (' + wc.name + '), ' + (wc.audio ? 'with music.' : $('musicOn').checked ? 'no music (the music file had not loaded).' : 'music switched off.'); updateSave(); }
+      }).catch(() => { if (rec.pending === wc) { rec.pending = null; updateSave(); } });
+    }
+  }
+  if (discard) { rec.mr = null; rec.blob = null; rec.pending = null; }
+}
+function recStart() {
+  if (!REC_OK) return;
+  recStop(true);
+  const wide = cw >= 700; rec.cv.width = wide ? 1280 : 720; rec.cv.height = wide ? 720 : 960;
+  rec.why = wcWhy;
+  if (!startWC(0)) recStartMR();
+}
+function startWC(idx) {
+  const c = wcCfgs[idx]; if (!c) return false;
+  const W = rec.cv.width, H = rec.cv.height;
+  try {
+    const audio = !!($('musicOn').checked && aac.banjo && aac.epic);
+    const muxer = new Mp4Muxer.Muxer({target: new Mp4Muxer.ArrayBufferTarget(), video: {codec: 'avc', width: W, height: H},
+      audio: audio ? {codec: 'aac', numberOfChannels: aac.banjo.ch, sampleRate: aac.banjo.sr} : undefined, fastStart: 'in-memory', firstTimestampBehavior: 'offset'});
+    const wc = {muxer, enc: null, idx, name: c.name, t0: 0, last: -1e9, n: 0, out: 0, err: false, msg: '', born: performance.now(), audio, lastTs: 0, marks: [{t: 0, name: curTrack}]};
+    wc.enc = new VideoEncoder({
+      output: (chunk, meta) => { try {
+        const data = new Uint8Array(chunk.byteLength); chunk.copyTo(data);
+        muxer.addVideoChunkRaw(data, chunk.type, Math.max(0, chunk.timestamp), chunk.duration > 0 ? chunk.duration : 33333, meta); wc.out++; } catch (e) { wc.err = true; wc.msg = String(e && e.message || e).slice(0, 140); } },
+      error: e => { wc.err = true; wc.msg = String(e && e.message || e).slice(0, 140); }
+    });
+    const cfg = {codec: c.codec, width: W, height: H, bitrate: 2.5e6, framerate: 30};
+    if (c.hardwareAcceleration) cfg.hardwareAcceleration = c.hardwareAcceleration;
+    wc.enc.configure(cfg);
+    rec.wc = wc; rec.on = true; rec.ext = 'mp4';
+    updateSave(); return true;
+  } catch (e) { rec.wc = null; rec.why += ` [${c.name}: ${String(e && e.message || e).slice(0, 140)}]`; return startWC(idx + 1); }
+}
+// fallback: the browser's own recorder (plays, but some players cannot show its length or scrub it)
+function recStartMR() {
+  rec.on = false;
+  if (!(window.MediaRecorder && rec.cv.captureStream)) { updateSave(); return; }
+  const make = (stream, types) => {
+    const type = types.find(t => MediaRecorder.isTypeSupported(t)); if (!type) throw 0;
+    const chunks = [], mr = new MediaRecorder(stream, {mimeType: type, videoBitsPerSecond: 6e6});
+    mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    mr.onstop = () => { if (!mr._discard && rec.mr === mr) { rec.blob = new Blob(chunks, {type: type.split(';')[0]}); updateSave(); } };
+    mr.start(1000); rec.mr = mr; rec.on = true; rec.ext = type.startsWith('video/mp4') ? 'mp4' : 'webm';
+  };
+  const video = rec.cv.captureStream(30);
+  // one mixed audio feed made from both music players, so the recording follows the switch between tracks
+  let tracks = [];
+  try {
+    const capName = music.captureStream ? 'captureStream' : music.mozCaptureStream ? 'mozCaptureStream' : '';
+    if ($('musicOn').checked && capName) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!rec.actx) {
+        rec.actx = new AC(); rec.mix = rec.actx.createMediaStreamDestination();
+        for (const k in TRACKS) {
+          const st = TRACKS[k].el[capName](), g = rec.actx.createGain(); g.gain.value = TRACKS[k].gain; g.connect(rec.mix);
+          if (capName === 'mozCaptureStream') g.connect(rec.actx.destination);
+          const hook = () => { if (!st._on && st.getAudioTracks().length) { st._on = 1; rec.actx.createMediaStreamSource(st).connect(g); } };
+          hook(); st.addEventListener('addtrack', hook);
+        }
+      }
+      if (rec.actx.state === 'suspended') rec.actx.resume();
+      tracks = rec.mix.stream.getAudioTracks();
+    }
+  } catch (e) {}
+  try {
+    if (!tracks.length) throw 0;
+    make(new MediaStream([...video.getVideoTracks(), ...tracks]), ['video/mp4;codecs="avc1.42E01E,mp4a.40.2"', 'video/webm;codecs="vp9,opus"', 'video/webm;codecs="vp8,opus"', 'video/webm']);
+    rec.info = 'backup recorder file with music. Some players cannot show its length or skip around in it. Why: ' + rec.why;
+  } catch (e) {
+    try { make(video, ['video/mp4;codecs="avc1.42E01E"', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']); rec.info = 'backup recorder file, no music. Some players cannot show its length or skip around in it. Why: ' + rec.why; } catch (e2) { rec.on = false; }
+  }
+  updateSave();
+}
+function fitText(c, text, maxW, size, font) {
+  do { c.font = font.replace('$', Math.round(size)); size *= .93; } while (c.measureText(text).width > maxW && size > 10);
+}
+function recDraw(now) {
+  const W = rec.cv.width, H = rec.cv.height, th = Math.round(H * .15), gh = H - th;
+  const DISP = '400 $px "Alfa Slab One",Rockwell,Georgia,serif', COND = '700 $px "Barlow Condensed","Arial Narrow",sans-serif';
+  rx.fillStyle = '#0d3326'; rx.fillRect(0, 0, W, H);
+  const sc = Math.min(W / cw, gh / ch), gw = cw * sc, g2 = ch * sc, gx = (W - gw) / 2, gy = (gh - g2) / 2;
+  rx.drawImage(cv, gx, gy, gw, g2);
+  rx.textAlign = 'center'; rx.textBaseline = 'middle'; rx.lineJoin = 'round';
+  // cut-in banner
+  if (spot && state === 'race') {
+    const bh = g2 * .2, slide = Math.min(1, spot.t / .2);
+    rx.save(); rx.translate(W / 2 - (1 - slide) * W, gy + g2 * (spot.lo ? .78 : .3)); rx.rotate(-.05);
+    rx.fillStyle = '#ffd23f'; rx.fillRect(-W, -bh / 2 - 9, W * 2, bh + 18);
+    rx.fillStyle = '#15231c'; rx.fillRect(-W, -bh / 2 - 5, W * 2, bh + 10);
+    rx.fillStyle = '#d8342c'; rx.fillRect(-W, -bh / 2, W * 2, bh);
+    fitText(rx, spot.title, W * .9, bh * .5, DISP);
+    rx.fillStyle = '#15231c'; rx.fillText(spot.title, 0, -bh * .13 + 4); rx.fillStyle = '#fff'; rx.fillText(spot.title, 0, -bh * .13);
+    fitText(rx, spot.sub.toUpperCase(), W * .9, bh * .22, COND); rx.fillStyle = '#ffd23f'; rx.fillText(spot.sub.toUpperCase(), 0, bh * .3);
+    rx.restore();
+  }
+  // cart girl photo card
+  if (now < pinUntil) {
+    const im = $('pinImg'), w = Math.min(gw * .36, g2 * .5), ih = w * 4 / 3, pad = w * .04, capH = w * .2;
+    const a = Math.min(1, (now - pinT0) / 300, (pinUntil - now) / 300), left = pinSide;
+    rx.save();
+    rx.translate(left ? gx + gw * .04 + w / 2 : gx + gw * .96 - w / 2, gy + g2 * .07 + (ih + capH) / 2 - (1 - a) * (g2 + ih));
+    rx.rotate(left ? -.087 : .087);
+    rx.shadowColor = 'rgba(0,0,0,.5)'; rx.shadowBlur = 24; rx.fillStyle = '#fff'; rx.fillRect(-w / 2, -(ih + capH) / 2, w, ih + capH); rx.shadowBlur = 0;
+    const iw = w - pad * 2, ihh = ih - pad, ix = -w / 2 + pad, iy = -(ih + capH) / 2 + pad;
+    rx.fillStyle = '#ff5fa2'; rx.fillRect(ix, iy, iw, ihh);
+    if (im.complete && im.naturalWidth) {
+      const r = Math.max(iw / im.naturalWidth, ihh / im.naturalHeight), sw = iw / r, sh = ihh / r;
+      try { rx.drawImage(im, (im.naturalWidth - sw) / 2, (im.naturalHeight - sh) / 2, sw, sh, ix, iy, iw, ihh); } catch (e) {}
+    }
+    const cap = $('pinCap').textContent; fitText(rx, cap, w * .92, capH * .42, DISP);
+    rx.fillStyle = '#15231c'; rx.fillText(cap, 0, (ih + capH) / 2 - capH / 2);
+    rx.restore();
+  }
+  // countdown
+  if (!$('count').hidden) {
+    const t = $('count').textContent; fitText(rx, t, gw * .9, g2 * .4, DISP);
+    rx.lineWidth = 14; rx.strokeStyle = '#15231c'; rx.strokeText(t, W / 2, gy + g2 / 2); rx.fillStyle = '#ffd23f'; rx.fillText(t, W / 2, gy + g2 / 2);
+  }
+  // final card
+  if (state === 'done') {
+    const order = [...carts].sort((a, b) => a.place - b.place), names = tieResult ? tieResult.map(c => c.name).join('  ·  ') : order[0].name + '  &  ' + order[1].name;
+    const head = "FARMER'S INVITATIONAL  ·  " + (tieResult ? 'THREE-WAY TIE' : 'YOUR CAPTAINS');
+    rx.fillStyle = 'rgba(11,107,58,.93)'; rx.fillRect(0, 0, W, gh);
+    rx.strokeStyle = '#ffd23f'; rx.lineWidth = 6; rx.strokeRect(14, 14, W - 28, gh - 28);
+    rx.fillStyle = '#ffd23f'; fitText(rx, head, W * .86, gh * .06, COND); rx.fillText(head, W / 2, gh * .32);
+    fitText(rx, names, W * .88, gh * .17, DISP); rx.fillStyle = '#15231c'; rx.fillText(names, W / 2, gh * .54 + 5); rx.fillStyle = '#fff'; rx.fillText(names, W / 2, gh * .54);
+    if (tieResult) { rx.fillStyle = '#ffd23f'; fitText(rx, 'PLAYOFF: CLOSEST TO THE PIN', W * .8, gh * .06, COND); rx.fillText('PLAYOFF: CLOSEST TO THE PIN', W / 2, gh * .74); }
+  }
+  // announcer strip
+  rx.fillStyle = '#15231c'; rx.fillRect(0, gh, W, th);
+  const tagW = Math.round(W * .16);
+  rx.fillStyle = '#d8342c'; rx.fillRect(0, gh, tagW, th);
+  rx.fillStyle = '#fff'; fitText(rx, 'WHISPER CAM', tagW * .84, th * .2, COND); rx.fillText('WHISPER CAM', tagW / 2, gh + th / 2);
+  const fs = Math.round(th * (W > 1000 ? .24 : .17)), words = $('say').textContent.split(' '), lines = [''], maxW = W - tagW - 48;
+  rx.font = `italic 600 ${fs}px Barlow,"Helvetica Neue",Arial,sans-serif`;
+  for (const w of words) { const t = lines[lines.length - 1] ? lines[lines.length - 1] + ' ' + w : w; if (rx.measureText(t).width > maxW && lines[lines.length - 1]) lines.push(w); else lines[lines.length - 1] = t; }
+  rx.textAlign = 'left'; rx.fillStyle = '#f6f3e7';
+  lines.slice(0, 4).forEach((l, i) => rx.fillText(l, tagW + 24, gh + th / 2 + (i - (Math.min(lines.length, 4) - 1) / 2) * fs * 1.2));
+  // hand the finished frame to the encoder at about 30 a second
+  const wc = rec.wc;
+  if (wc && (wc.err || (!wc.out && now - wc.born > 2500))) {
+    rec.why += ` [${wc.name}: ${wc.msg || 'no frames came out'}]`;
+    try { wc.enc.close(); } catch (e) {}
+    rec.wc = null; if (!startWC(wc.idx + 1)) recStartMR();
+    return;
+  }
+  if (wc && now - wc.last >= 30 && wc.enc.encodeQueueSize < 4) {
+    try {
+      if (!wc.n) wc.t0 = now;
+      const f = new VideoFrame(rec.cv, {timestamp: wc.lastTs = Math.round((now - wc.t0) * 1000), duration: 33333});
+      wc.enc.encode(f, {keyFrame: wc.n % 60 === 0}); f.close(); wc.n++; wc.last = now;
+    } catch (e) {}
+  }
+}
+$('save').addEventListener('click', async () => {
+  if (!rec.blob) return;
+  const name = 'farmers-invitational.' + rec.ext, note = $('saveNote'), tell = t => { note.textContent = t + (rec.info ? ' File type: ' + rec.info : ''); note.hidden = false; };
+  let dl = null;
+  try { dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch (e) {}
+  if (dl) {
+    try { await dl.save({filename: name, data: rec.blob}); tell('Video saved.'); }
+    catch (e) {
+      const code = e && e.code;
+      tell(code === 'declined' ? 'Not saved.' : code === 'rate_limited' ? 'A save prompt is already open. Try again in a moment.'
+        : 'Saving is not available in this view. Open the page in a browser tab and try again.');
+    }
+  } else {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(rec.blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    tell(SITE ? 'Download started.' : 'If nothing downloaded, saving is not available in this view. Open the page in a browser tab and try again.');
+  }
+});
+
+let speed = 1;
+$('speed').addEventListener('click', () => { speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; $('speed').textContent = 'Speed ' + speed + '×'; });
+
+/* ---------- loop ---------- */
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  let ts = 1;
+  if (spot) {
+    spot.t += dt * speed; ts = .22;
+    if (spot.zoom) { zx = clamp(sx(spot.c.x), 0, cw); zy = laneY(spot.c.lane) - 20 * S; }
+    if (spot.t >= spot.dur || state !== 'race') { spot = null; spotCool = rnd(2.5, 4.5); $('cut').hidden = true; }
+  } else spotCool -= dt;
+  zoom += ((spot && spot.zoom ? 1.5 : 1) - zoom) * Math.min(1, dt * 6);
+  shake *= Math.pow(.01, dt); flash *= Math.pow(.04, dt);
+  if (tie && !tie.done && tie.dur - (T - tie.T0) < 1.3) ts = Math.min(ts, .3);
+  // the speed button runs the simulation several steps per frame
+  for (let i = 0; i < speed; i++) { if (mode === 'par3') p3Step(dt); else step(dt * ts); }
+  if (mode === 'par3') { p3Draw(); window.__cpc = {state}; } else draw();
+  if (rec.on) { recDraw(now); if (rec.tail && now > rec.tail) recStop(false); }
+  if (state === 'race' && now - boardAt > 250) { boardAt = now; renderBoard(); }
+  requestAnimationFrame(frame);
+}
+new ResizeObserver(resize).observe($('stage'));
+resize(); preview(); layout();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
