@@ -1162,7 +1162,7 @@ function setMode(m) {
   preview(); say('Quiet on the tee, please. Enter the field, then send them.', true);
 }
 const SITE = /github\.io$/.test(location.hostname);
-let unlocked = !SITE;
+let unlocked = true;   // the scripted-tie option is shown to everyone
 try { if (location.hash === '#director') localStorage.setItem('cpc-director', '1'); unlocked = unlocked || !!localStorage.getItem('cpc-director'); } catch (e) { unlocked = unlocked || location.hash === '#director'; }
 function setShow(v) {
   show = v && unlocked; $('rig').checked = show; $('rigRow').hidden = mode !== 'race' || !unlocked;
